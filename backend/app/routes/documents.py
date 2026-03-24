@@ -121,3 +121,14 @@ def trigger_reindex(current_user):
         from flask import current_app
         current_app.logger.error(f"Manual reindex failed: {e}")
         return jsonify({'error': f'Reindex failed: {str(e)}'}), 500
+
+@bp.route('/debug_reindex', methods=['POST'])
+def trigger_debug_reindex():
+    from reindex_all import reindex_all
+    try:
+        reindex_all()
+        return jsonify({'message': 'Debug reindex completed successfully'}), 200
+    except Exception as e:
+        from flask import current_app
+        current_app.logger.error(f"Debug reindex failed: {e}")
+        return jsonify({'error': f'Debug reindex failed: {str(e)}'}), 500
