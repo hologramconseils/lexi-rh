@@ -5,3 +5,4 @@ PyJWT==2.8.0
 elasticsearch==8.11.0
 Flask-Cors==4.0.0
 python-dotenv==1.0.0
+gunicorn==21.2.0
