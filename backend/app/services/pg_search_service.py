@@ -217,4 +217,84 @@ class PgSearchService:
         return (prefix + highlight + suffix).strip()
 
 
+    def suggest(self, query_text, limit=5):
+        """Get autocomplete suggestions from titles and content."""
+        if not query_text or len(query_text.strip()) < 2:
+            return []
+
+        dialect = db.engine.name
+        if dialect != 'postgresql':
+            # Basic fallback for SQLite
+            search_pattern = f"{query_text}%"
+            sql = text("SELECT DISTINCT title FROM documents WHERE title LIKE :pattern LIMIT :limit")
+            try:
+                result = db.session.execute(sql, {'pattern': search_pattern, 'limit': limit})
+                return [row[0] for row in result.fetchall()]
+            except:
+                return []
+
+        # Postgres implementation
+        # 1. Matches in titles (highest priority)
+        # 2. Matches in content (short snippets)
+        # We use a subquery to gather distinct suggestions and rank them
+        sql = text("""
+            WITH suggestions AS (
+                -- Match in titles
+                SELECT 
+                    d.title as suggestion,
+                    1 as rank_order
+                FROM documents d
+                WHERE d.title ILIKE :prefix_pattern
+                
+                UNION ALL
+                
+                -- Match in content (extract a short phrase)
+                -- We use ts_headline to get a very short, clean fragment
+                SELECT 
+                    ts_headline('french', dc.content, to_tsquery('french', :ts_query),
+                        'StartSel="", StopSel="", MaxWords=8, MinWords=3, ShortWord=3'
+                    ) as suggestion,
+                    2 as rank_order
+                FROM document_chunks dc
+                WHERE to_tsvector('french', dc.content) @@ to_tsquery('french', :ts_query)
+            )
+            SELECT DISTINCT LOWER(suggestion) as suggestion, MIN(rank_order) as min_rank
+            FROM suggestions
+            WHERE suggestion IS NOT NULL AND length(suggestion) > 3 AND suggestion !~ '^\\s*$'
+            GROUP BY LOWER(suggestion)
+            ORDER BY min_rank ASC, LOWER(suggestion) ASC
+            LIMIT :limit
+        """)
+
+        try:
+            # Prepare prefix for ILIKE and ts_query
+            prefix_pattern = f"%{query_text}%"
+            # For ts_query, we use prefix matching :*
+            # Clean non-alphanumeric for safety and add :*
+            clean_query = re.sub(r'[^\w\s]', '', query_text).strip()
+            if not clean_query:
+                return []
+            ts_query = " & ".join(f"{word}:*" for word in clean_query.split())
+
+            result = db.session.execute(sql, {
+                'prefix_pattern': prefix_pattern, 
+                'ts_query': ts_query,
+                'limit': limit
+            })
+            
+            # Clean up the output (remove ellipses if any from ts_headline)
+            suggestions = []
+            for row in result.fetchall():
+                s = row[0].replace('...', '').strip()
+                # Capitalize first letter
+                if s:
+                    s = s[0].upper() + s[1:]
+                    suggestions.append(s)
+                    
+            return suggestions[:limit]
+        except Exception as e:
+            current_app.logger.error(f"Suggest Error: {e}")
+            return []
+
+
 pg_search_service = PgSearchService()

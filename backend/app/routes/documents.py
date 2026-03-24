@@ -116,6 +116,15 @@ def search_documents():
         })
     return jsonify(formatted_results)
 
+@bp.route('/suggest', methods=['GET'])
+def suggest_documents():
+    query = request.args.get('q', '')
+    if not query or len(query.strip()) < 2:
+        return jsonify([])
+        
+    suggestions = pg_search_service.suggest(query)
+    return jsonify(suggestions)
+
 @bp.route('/reindex', methods=['POST'])
 @admin_required
 def trigger_reindex(current_user):

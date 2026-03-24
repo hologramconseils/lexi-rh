@@ -19,16 +19,52 @@ const Dashboard = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionRef = React.useRef<HTMLDivElement>(null);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  React.useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (query.trim().length < 2) {
+        setSuggestions([]);
+        return;
+      }
+      try {
+        const res = await axios.get(`${API_URL}/documents/suggest?q=${encodeURIComponent(query)}`);
+        setSuggestions(res.data);
+      } catch (err) {
+        console.error("Suggestions error:", err);
+      }
+    };
+
+    const debounceTimer = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [query]);
+
+  const handleSearch = async (e: React.FormEvent | string) => {
+    if (typeof e !== 'string') e.preventDefault();
+    const searchQuery = typeof e === 'string' ? e : query;
     
+    if (!searchQuery.trim()) return;
+    
+    setQuery(searchQuery);
     setLoading(true);
     setSearched(true);
+    setShowSuggestions(false);
+    
     try {
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.get(`${API_URL}/documents/search?q=${encodeURIComponent(query)}`, config);
+      const res = await axios.get(`${API_URL}/documents/search?q=${encodeURIComponent(searchQuery)}`, config);
       setResults(res.data);
     } catch (err) {
       console.error(err);
@@ -53,11 +89,6 @@ const Dashboard = () => {
         </div>
 
         <form onSubmit={handleSearch} className="relative">
-          {/* Dynamic "Lexi-RH" label appearing above the search bar as a model name */}
-          <div className={`absolute -top-7 left-1 text-sm font-bold text-blue-600 dark:text-blue-500 transition-all duration-300 transform ${query ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-            Lexi-RH
-          </div>
-          
           <div className="flex flex-col sm:flex-row shadow-md rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 transition-all focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500">
             <div className="flex flex-1 items-center">
               <div className="pl-4 text-slate-400 dark:text-slate-500 hidden sm:block">
@@ -67,6 +98,7 @@ const Dashboard = () => {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
                 className="block w-full py-4 px-4 sm:pl-3 sm:pr-3 text-slate-900 dark:text-white bg-transparent placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none sm:text-lg rounded-l-lg"
                 placeholder="Ex: Quel est le préavis de démission ?"
               />
@@ -79,6 +111,26 @@ const Dashboard = () => {
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Rechercher'}
             </button>
           </div>
+
+          {/* Suggestions Dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div ref={suggestionRef} className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+              <ul className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                {suggestions.map((s, idx) => (
+                  <li 
+                    key={idx}
+                    onClick={() => handleSearch(s)}
+                    className="px-5 py-3.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-slate-700 dark:text-slate-200 transition-colors flex items-center group"
+                  >
+                    <div className="bg-slate-100 dark:bg-slate-700 p-1.5 rounded-md mr-3 group-hover:bg-blue-100 dark:group-hover:bg-blue-800 transition-colors">
+                      <Search className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-300" />
+                    </div>
+                    <span className="font-medium">{s}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </form>
 
         <div className="mt-12 space-y-6">
