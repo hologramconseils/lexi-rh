@@ -10,7 +10,8 @@ const ThemeToggle: React.FC = () => {
       <button
         onClick={() => setTheme('light')}
         title="Mode Jour"
-        className={`p-1.5 rounded-md transition-all ${
+        aria-label="Passer au mode jour"
+        className={`p-1.5 rounded-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 ${
           theme === 'light' 
             ? 'bg-white shadow text-yellow-500 dark:bg-slate-700 dark:text-yellow-400' 
             : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
@@ -21,7 +22,8 @@ const ThemeToggle: React.FC = () => {
       <button
         onClick={() => setTheme('system')}
         title="Mode Système"
-        className={`p-1.5 rounded-md transition-all ${
+        aria-label="Utiliser le thème du système"
+        className={`p-1.5 rounded-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 ${
           theme === 'system' 
             ? 'bg-white shadow text-slate-800 dark:bg-slate-700 dark:text-blue-400' 
             : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
@@ -32,7 +34,8 @@ const ThemeToggle: React.FC = () => {
       <button
         onClick={() => setTheme('dark')}
         title="Mode Nuit"
-        className={`p-1.5 rounded-md transition-all ${
+        aria-label="Passer au mode nuit"
+        className={`p-1.5 rounded-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
           theme === 'dark' 
             ? 'bg-white shadow text-indigo-500 dark:bg-slate-700 dark:text-indigo-400' 
             : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'

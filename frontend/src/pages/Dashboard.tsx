@@ -44,13 +44,13 @@ const Dashboard = () => {
       <nav className="bg-white dark:bg-slate-900 shadow border-b border-slate-200 dark:border-slate-800 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-500">
+            <Link to="/" className="flex items-center space-x-2 text-blue-600 dark:text-blue-500 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-md p-1" title="Retour à l'accueil">
               <BookOpen className="w-8 h-8" />
               <h1 className="text-xl font-bold text-slate-900 dark:text-white hidden sm:block">Lexi-RH</h1>
               <span className="ml-2 sm:ml-4 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
                 Espace Salarié
               </span>
-            </div>
+            </Link>
             <div className="flex items-center space-x-4 sm:space-x-6">
               <ThemeToggle />
               {user ? (
@@ -92,14 +92,14 @@ const Dashboard = () => {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="block w-full py-4 px-4 sm:pl-3 sm:pr-3 text-slate-900 dark:text-white bg-transparent placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none sm:text-lg"
+                className="block w-full py-4 px-4 sm:pl-3 sm:pr-3 text-slate-900 dark:text-white bg-transparent placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset sm:text-lg rounded-l-lg transition-shadow"
                 placeholder="Ex: Quel est le préavis de démission ?"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-4 bg-blue-600 text-white font-medium hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 focus:outline-none transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center sm:w-auto w-full"
+              className="px-6 py-4 bg-blue-600 text-white font-medium hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center sm:w-auto w-full"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Rechercher'}
             </button>
