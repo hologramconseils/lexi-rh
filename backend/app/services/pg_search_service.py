@@ -23,11 +23,18 @@ class PgSearchService:
         """Split content into chunks and store them for search."""
         chunk_size = 1500
 
-        # Clean up PDF newlines
-        content = re.sub(r'(?<![.!?/:;-])\n+(?=[a-z])', ' ', content)
+        # Normalization
+        # 1. Remove hyphens at line breaks (e.g. "prépara- tion" -> "préparation")
+        content = re.sub(r'(\w)-\s*\n\s*(\w)', r'\1\2', content)
+        # 2. Replace newlines with spaces (unless it's a paragraph break)
+        content = re.sub(r'(?<!\n)\n(?!\n)', ' ', content)
+        # 3. Collapse multiple spaces
+        content = re.sub(r' +', ' ', content)
+        # 4. Collapse multiple paragraph breaks
+        content = re.sub(r'\n\n+', '\n\n', content)
 
-        # Split into logical blocks
-        blocks = re.split(r'\n\s*\n|(?<=[.!?])\s+(?=[A-Z0-9])', content)
+        # Split into blocks at paragraph or sentence boundaries
+        blocks = re.split(r'\n\n|(?<=[.!?])\s+(?=[A-Z0-9])', content)
 
         chunks = []
         current_chunk = ""
@@ -48,7 +55,7 @@ class PgSearchService:
             chunks.append(current_chunk.strip())
 
         try:
-            # Delete old chunks if any
+            # Delete old chunks
             DocumentChunk.query.filter_by(document_id=doc_id).delete()
             
             for idx, chunk in enumerate(chunks):
@@ -98,7 +105,7 @@ class PgSearchService:
                     websearch_to_tsquery('french', :query)
                 ) AS score,
                 ts_headline('french', dc.content, websearch_to_tsquery('french', :query),
-                    'StartSel=<mark>, StopSel=</mark>, MaxFragments=0'
+                    'StartSel=<mark>, StopSel=</mark>, MaxFragments=0, MaxWords=100, MinWords=40, ShortWord=3'
                 ) AS highlight
             FROM document_chunks dc
             JOIN documents d ON d.id = dc.document_id
@@ -143,11 +150,12 @@ class PgSearchService:
     def _format_results(self, rows):
         hits = []
         for row in rows:
-            # For SQLite, highlight is just the content, we could do basic string replace if needed
             highlight_content = row.highlight
-            if '<mark>' not in highlight_content and row.score == 1.0:
-                # Simple highlight for SQLite fallback
-                pass # Dashbaord.tsx handles some highlighting but expects <mark> tags
+            
+            # Post-process highlight to ensure full sentences
+            # We look for the highlight in the original content to expand it
+            if '<mark>' in highlight_content:
+                highlight_content = self._expand_to_full_sentences(highlight_content, row.content)
 
             hits.append({
                 '_source': {
@@ -162,6 +170,51 @@ class PgSearchService:
                 }
             })
         return hits
+
+    def _expand_to_full_sentences(self, highlight, full_content):
+        """Expands the highlight snippet to the nearest full sentence boundaries."""
+        # Remove markers to find the raw text in the content
+        raw_snippet = highlight.replace('<mark>', '').replace('</mark>', '')
+        
+        # Find the snippet in the full content
+        start_idx = full_content.find(raw_snippet)
+        if start_idx == -1:
+            return highlight # Fallback if not found
+
+        end_idx = start_idx + len(raw_snippet)
+
+        # Expand backwards to start of sentence
+        # Look for [.!?] followed by space or start of string
+        search_start = full_content[:start_idx][::-1]
+        match_start = re.search(r'[.!?]\s', search_start)
+        if match_start:
+            new_start = start_idx - match_start.start()
+        else:
+            new_start = 0
+
+        # Expand forwards to end of sentence
+        search_end = full_content[end_idx:]
+        match_end = re.search(r'[.!?](\s|$)', search_end)
+        if match_end:
+            new_end = end_idx + match_end.end()
+        else:
+            new_end = len(full_content)
+
+        expanded_raw = full_content[new_start:new_end].strip()
+        
+        # Now re-insert the marks by finding keywords from the original highlight
+        # This is tricky because ts_headline might have done stemming.
+        # However, ts_headline with <mark> usually marks the original words.
+        
+        # Simple approach: if the expanded text contains the original marks, we are good.
+        # But it doesn't. We need to re-apply marking.
+        # Actually, if we just use the original highlight but "padded" with the context 
+        # from the full_content, it's easier.
+        
+        prefix = full_content[new_start:start_idx]
+        suffix = full_content[end_idx:new_end]
+        
+        return (prefix + highlight + suffix).strip()
 
 
 pg_search_service = PgSearchService()

@@ -11,12 +11,18 @@ bp = Blueprint('documents', __name__, url_prefix='/api/documents')
 
 def extract_text_from_pdf(file_stream):
     doc = fitz.open(stream=file_stream.read(), filetype="pdf")
-    text = ""
+    text_blocks = []
     for page in doc:
-        extracted = page.get_text("text")
-        if extracted:
-            text += extracted + "\n"
-    return text
+        # "blocks" is better for flow than "text"
+        blocks = page.get_text("blocks")
+        for b in blocks:
+            if b[4].strip():
+                # b[4] is the text content of the block
+                clean_block = b[4].replace('\n', ' ').strip()
+                text_blocks.append(clean_block)
+    
+    full_text = "\n\n".join(text_blocks)
+    return full_text
 
 @bp.route('/', methods=['POST'])
 @admin_required
