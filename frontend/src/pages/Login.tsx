@@ -67,7 +67,15 @@ const Login: React.FC = () => {
         setConfirmPassword('');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Une erreur est survenue.');
+      if (!err.response) {
+        setError('Le serveur est injoignable. Veuillez vérifier votre connexion ou réessayer plus tard.');
+      } else if (err.response.status === 400 && err.response.data?.error === 'Email already exists') {
+        setError('Cet adresse email est déjà utilisée.');
+      } else if (err.response.status === 401) {
+        setError('Identifiants invalides. Veuillez réessayer.');
+      } else {
+        setError(err.response?.data?.error || 'Une erreur est survenue.');
+      }
     }
   };
 

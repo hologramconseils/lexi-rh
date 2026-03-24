@@ -1,5 +1,7 @@
 import os
-from flask import Flask
+import logging
+from logging.handlers import RotatingFileHandler
+from flask import Flask, jsonify
 from flask_cors import CORS
 from app.models import db
 
@@ -12,7 +14,11 @@ def create_app():
     
     # Load configuration from environment variables
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev_secret_key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///lexi_rh.db')
+    database_url = os.getenv('DATABASE_URL', 'sqlite:///lexi_rh.db')
+    # Render uses postgres:// but SQLAlchemy requires postgresql://
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize extensions
@@ -24,6 +30,28 @@ def create_app():
     app.register_blueprint(documents.bp)
     app.register_blueprint(users.bp)
     
+    # Configure logging
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+    file_handler = RotatingFileHandler('logs/lexi_rh.log', maxBytes=10240, backupCount=10)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('Lexi-RH startup')
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        app.logger.error(f'Server Error: {error}')
+        return jsonify({'error': 'Une erreur serveur est survenue. Veuillez réessayer plus tard.'}), 500
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return jsonify({'error': 'Ressource non trouvée.'}), 404
+
     @app.route('/api/health', methods=['GET'])
     def health_check():
         return {"status": "healthy"}, 200
