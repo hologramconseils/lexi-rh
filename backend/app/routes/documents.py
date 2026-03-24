@@ -119,8 +119,6 @@ def search_documents():
 @bp.route('/suggest', methods=['GET'])
 def suggest_documents():
     query = request.args.get('q', '')
-    from flask import current_app
-    current_app.logger.info(f"Suggest hit for query: {query}")
     if not query or len(query.strip()) < 2:
         return jsonify([])
         
