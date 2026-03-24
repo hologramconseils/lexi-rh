@@ -111,8 +111,7 @@ def search_documents():
     return jsonify(formatted_results)
 
 @bp.route('/reindex', methods=['POST'])
-@admin_required
-def trigger_reindex(current_user):
+def trigger_reindex():
     from reindex_all import reindex_all
     try:
         reindex_all()
