@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { User as UserIcon, Eye, EyeOff } from 'lucide-react';
 import { API_URL } from '../config';
 
@@ -105,6 +106,7 @@ const Profile = () => {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

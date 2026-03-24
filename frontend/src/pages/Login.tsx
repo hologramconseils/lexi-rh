@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { BookOpen, Eye, EyeOff, Home, UserPlus, LogIn, KeyRound } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
+import Footer from '../components/Footer';
 import { API_URL } from '../config';
 
 type LoginMode = 'login' | 'register' | 'reset';
@@ -220,6 +221,7 @@ const Login: React.FC = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

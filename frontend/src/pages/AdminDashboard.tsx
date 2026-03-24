@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { Trash2, Upload, FileText } from 'lucide-react';
 import { API_URL } from '../config';
 
@@ -169,6 +170,7 @@ const AdminDashboard = () => {
           </ul>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

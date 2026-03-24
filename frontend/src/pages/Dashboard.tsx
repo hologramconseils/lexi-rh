@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { Search, BookOpen, AlertCircle, Loader2 } from 'lucide-react';
 import { API_URL } from '../config';
 
@@ -14,7 +15,14 @@ interface SearchResult {
 }
 
 const Dashboard = () => {
-  const { token } = useAuth();
+  const { user, token, logout } = useAuth();
+
+  // Auto-logout admin if they access the public dashboard
+  React.useEffect(() => {
+    if (user?.role === 'admin') {
+      logout();
+    }
+  }, [user, logout]);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -193,6 +201,7 @@ const Dashboard = () => {
           ))}
         </div>
       </main>
+      <Footer />
     </div>
   );
 };
