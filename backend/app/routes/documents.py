@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 from app.models import db
 from app.models.document import Document
 from app.utils.auth import token_required, admin_required
-from app.services.elasticsearch_service import es_service
+from app.services.pg_search_service import pg_search_service
 import fitz  # PyMuPDF
 import io
 
@@ -58,16 +58,17 @@ def upload_document(current_user):
     db.session.add(new_doc)
     db.session.commit()
     
-    # Index to Elasticsearch
+    # Index to Postgres
     try:
-        es_service.index_document(
+        pg_search_service.index_document(
             doc_id=new_doc.id, 
             title=title, 
             doc_type=doc_type, 
             content=content_text
         )
     except Exception as e:
-        print(f"Failed to index: {e}")
+        from flask import current_app
+        current_app.logger.error(f"Failed to index document {new_doc.id} ({title}): {e}")
         
     return jsonify({'message': 'Document uploaded and indexed', 'document': new_doc.to_dict()}), 201
 
@@ -82,7 +83,7 @@ def list_documents(current_user):
 def delete_document(current_user, doc_id):
     doc = Document.query.get_or_404(doc_id)
     
-    es_service.delete_document(doc_id)
+    pg_search_service.delete_document(doc_id)
     
     db.session.delete(doc)
     db.session.commit()
@@ -95,7 +96,7 @@ def search_documents():
     if not query:
         return jsonify([])
         
-    results = es_service.search(query)
+    results = pg_search_service.search(query)
     formatted_results = []
     for hit in results:
         source = hit['_source']

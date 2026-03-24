@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Search, BookOpen, AlertCircle, LogOut, Loader2, User as UserIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import ThemeToggle from '../components/ThemeToggle';
+import Navbar from '../components/Navbar';
+import { Search, BookOpen, AlertCircle, Loader2 } from 'lucide-react';
 import { API_URL } from '../config';
 
 interface SearchResult {
@@ -15,7 +14,7 @@ interface SearchResult {
 }
 
 const Dashboard = () => {
-  const { user, token, logout } = useAuth();
+  const { token } = useAuth();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,36 +40,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col transition-colors">
-      <nav className="bg-white dark:bg-slate-900 shadow border-b border-slate-200 dark:border-slate-800 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <Link to="/" className="flex items-center space-x-2 text-blue-600 dark:text-blue-500 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-md p-1" title="Retour à l'accueil">
-              <BookOpen className="w-8 h-8" />
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white hidden sm:block">Lexi-RH</h1>
-              <span className="ml-2 sm:ml-4 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                Espace Salarié
-              </span>
-            </Link>
-            <div className="flex items-center space-x-4 sm:space-x-6">
-              <ThemeToggle />
-              {user ? (
-                <>
-                  <Link to="/profile" className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" title="Mon Profil">
-                    <UserIcon className="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5" /> <span className="hidden sm:inline">Mon Profil</span>
-                  </Link>
-                  <button onClick={logout} className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Déconnexion">
-                    <LogOut className="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5" /> <span className="hidden sm:inline">Déconnexion</span>
-                  </button>
-                </>
-              ) : (
-                <Link to="/login" className="flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors" title="Espace employeur">
-                  <UserIcon className="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5" /> <span className="hidden sm:inline">Espace employeur / RH</span>
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar variant="public" />
 
       <main className="flex-1 max-w-4xl mx-auto w-full py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
@@ -153,7 +123,7 @@ const Dashboard = () => {
                       className="text-slate-700 dark:text-slate-300 leading-relaxed text-[15px] mb-3 last:mb-0 whitespace-pre-line text-justify dark:[&>mark]:bg-blue-900/40 dark:[&>mark]:text-blue-200"
                       dangerouslySetInnerHTML={{ 
                         __html: highlight
-                          .replace(/[ \t]+/g, ' ') 
+                          .replace(/[^\S\n]+/g, ' ') 
                           .replace(/<mark>/g, '<mark class="bg-yellow-200 px-1 rounded text-slate-900 font-medium dark:bg-blue-900/60 dark:text-blue-200">') 
                       }}
                     />

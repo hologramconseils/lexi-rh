@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Trash2, Upload, FileText, User as UserIcon, LogOut } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import ThemeToggle from '../components/ThemeToggle';
+import Navbar from '../components/Navbar';
+import { Trash2, Upload, FileText } from 'lucide-react';
 import { API_URL } from '../config';
 
 interface Document {
@@ -14,20 +13,13 @@ interface Document {
 }
 
 const AdminDashboard = () => {
-  const { token, logout } = useAuth();
+  const { token } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [docType, setDocType] = useState('Code du travail');
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
-
-  const handleLogoutAndRedirect = (e: React.MouseEvent) => {
-    e.preventDefault();
-    logout();
-    navigate('/dashboard');
-  };
 
   const fetchDocuments = async () => {
     try {
@@ -88,27 +80,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors">
-      <nav className="bg-white dark:bg-slate-900 shadow border-b border-slate-200 dark:border-slate-800 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white truncate">Lexi-RH Admin</h1>
-              <span className="ml-2 sm:ml-4 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 hidden sm:block">
-                Espace employeur / RH
-              </span>
-            </div>
-            <div className="flex items-center space-x-4 sm:space-x-6">
-               <ThemeToggle />
-               <Link to="/profile" className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" title="Mon Profil">
-                 <UserIcon className="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5" /> <span className="hidden sm:inline">Mon Profil</span>
-               </Link>
-               <button onClick={handleLogoutAndRedirect} className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Déconnexion">
-                 <LogOut className="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5" /> <span className="hidden sm:inline">Déconnexion</span>
-               </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar variant="admin" />
 
       <main className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <div className="bg-white dark:bg-slate-800 shadow sm:rounded-lg mb-8 border border-slate-100 dark:border-slate-700 transition-colors">

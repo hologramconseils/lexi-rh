@@ -64,4 +64,5 @@ def create_db(app):
     with app.app_context():
         import app.models.user
         import app.models.document
+        from app.services.pg_search_service import DocumentChunk
         db.create_all()

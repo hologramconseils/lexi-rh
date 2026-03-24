@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import { User as UserIcon, LogOut, ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import ThemeToggle from '../components/ThemeToggle';
+import Navbar from '../components/Navbar';
+import { User as UserIcon, Eye, EyeOff } from 'lucide-react';
 import { API_URL } from '../config';
 
 const Profile = () => {
-  const { user, token, logout, login } = useAuth();
+  const { user, token, login } = useAuth();
   const [email, setEmail] = useState(user?.email || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,32 +42,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col transition-colors">
-      <nav className="bg-white dark:bg-slate-900 shadow border-b border-slate-200 dark:border-slate-800 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button onClick={() => navigate(-1)} className="text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" title="Retour">
-                <ArrowLeft className="w-5 h-5 sm:w-5 sm:h-5" />
-              </button>
-              <h1 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white truncate">Mon Profil</h1>
-            </div>
-            <div className="flex items-center space-x-4 sm:space-x-6">
-              <ThemeToggle />
-              <button 
-                onClick={(e) => {
-                  e.preventDefault();
-                  logout();
-                  navigate('/dashboard');
-                }} 
-                className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                title="Déconnexion"
-              >
-                <LogOut className="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5" /> <span className="hidden sm:inline">Déconnexion</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar showBackButton />
 
       <main className="flex-1 max-w-3xl mx-auto w-full py-12 px-4 sm:px-6 lg:px-8">
         <div className="bg-white dark:bg-slate-800 shadow sm:rounded-lg overflow-hidden border border-slate-100 dark:border-slate-700 transition-colors">
