@@ -53,7 +53,12 @@ const Dashboard = () => {
         </div>
 
         <form onSubmit={handleSearch} className="relative">
-          <div className="flex flex-col sm:flex-row shadow-sm rounded-lg overflow-hidden border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 transition-all focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+          {/* Dynamic "Lexi-RH" label appearing above the search bar as a model name */}
+          <div className={`absolute -top-7 left-1 text-sm font-bold text-blue-600 dark:text-blue-500 transition-all duration-300 transform ${query ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+            Lexi-RH
+          </div>
+          
+          <div className="flex flex-col sm:flex-row shadow-md rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 transition-all focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500">
             <div className="flex flex-1 items-center">
               <div className="pl-4 text-slate-400 dark:text-slate-500 hidden sm:block">
                 <Search className="w-5 h-5" />
@@ -62,14 +67,14 @@ const Dashboard = () => {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="block w-full py-4 px-4 sm:pl-3 sm:pr-3 text-slate-900 dark:text-white bg-transparent placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset sm:text-lg rounded-l-lg transition-shadow"
+                className="block w-full py-4 px-4 sm:pl-3 sm:pr-3 text-slate-900 dark:text-white bg-transparent placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none sm:text-lg rounded-l-lg"
                 placeholder="Ex: Quel est le préavis de démission ?"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-4 bg-blue-600 text-white font-medium hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center sm:w-auto w-full"
+              className="px-8 py-4 bg-blue-600 text-white font-semibold hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 focus:outline-none transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center sm:w-auto w-full"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Rechercher'}
             </button>
