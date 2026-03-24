@@ -109,3 +109,15 @@ def search_documents():
             'highlights': highlights
         })
     return jsonify(formatted_results)
+
+@bp.route('/reindex', methods=['POST'])
+@admin_required
+def trigger_reindex(current_user):
+    from reindex_all import reindex_all
+    try:
+        reindex_all()
+        return jsonify({'message': 'Reindex completed successfully'}), 200
+    except Exception as e:
+        from flask import current_app
+        current_app.logger.error(f"Manual reindex failed: {e}")
+        return jsonify({'error': f'Reindex failed: {str(e)}'}), 500

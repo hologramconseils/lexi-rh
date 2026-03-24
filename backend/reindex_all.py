@@ -2,10 +2,12 @@ from app import create_app, db
 from app.models.document import Document
 from app.services.pg_search_service import pg_search_service, DocumentChunk
 
-def reindex_all():
-    app = create_app()
+def reindex_all(app=None):
+    if app is None:
+        app = create_app()
+        
     with app.app_context():
-        print("Fetching all documents from PostgreSQL...")
+        print("Fetching all documents for re-indexing...")
         docs = Document.query.all()
         
         # Clear existing chunks
@@ -19,7 +21,7 @@ def reindex_all():
             
         print(f"Found {len(docs)} documents. Re-indexing...")
         for doc in docs:
-            print(f" -> Indexing {doc.title} (ID: {doc.id}) with the new chunking algorithm...")
+            print(f" -> Indexing {doc.title} (ID: {doc.id})...")
             try:
                 pg_search_service.index_document(
                     doc_id=doc.id,
