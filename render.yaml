@@ -3,12 +3,14 @@ databases:
     plan: free
     databaseName: lexi_rh
     user: lexi_user
+    region: frankfurt
 
 services:
   - type: web
     name: lexi-rh-backend
     runtime: python
     plan: free
+    region: frankfurt
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn run:app
