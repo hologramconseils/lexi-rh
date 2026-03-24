@@ -5,11 +5,14 @@ from app.models import db
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    
+    # Configure CORS
+    allowed_origins = os.getenv('ALLOWED_ORIGINS', '*').split(',')
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
     
     # Load configuration from environment variables
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev_secret_key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://lexi_user:lexi_password@localhost:5432/lexi_db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///lexi_rh.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize extensions

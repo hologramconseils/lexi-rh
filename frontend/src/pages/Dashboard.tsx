@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Search, BookOpen, AlertCircle, LogOut, Loader2, User as UserIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
+import { API_URL } from '../config';
 
 interface SearchResult {
   document_id: number;
@@ -28,7 +29,7 @@ const Dashboard = () => {
     setSearched(true);
     try {
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.get(`http://localhost:5001/api/documents/search?q=${encodeURIComponent(query)}`, config);
+      const res = await axios.get(`${API_URL}/documents/search?q=${encodeURIComponent(query)}`, config);
       setResults(res.data);
     } catch (err) {
       console.error(err);

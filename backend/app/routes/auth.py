@@ -45,3 +45,18 @@ def register():
 @token_required
 def get_me(current_user):
     return jsonify({'user': current_user.to_dict()})
+
+@bp.route('/reset-password', methods=['POST'])
+def reset_password():
+    data = request.get_json()
+    if not data or not data.get('email') or not data.get('new_password'):
+        return jsonify({'error': 'Email and new password required'}), 400
+        
+    user = User.query.filter_by(email=data['email']).first()
+    if not user:
+        return jsonify({'error': 'Utilisateur introuvable'}), 404
+        
+    user.set_password(data['new_password'])
+    db.session.commit()
+    
+    return jsonify({'message': 'Mot de passe mis à jour avec succès'}), 200

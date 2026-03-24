@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Trash2, Upload, FileText, User as UserIcon, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
+import { API_URL } from '../config';
 
 interface Document {
   id: number;
@@ -30,7 +31,7 @@ const AdminDashboard = () => {
 
   const fetchDocuments = async () => {
     try {
-      const res = await axios.get('http://localhost:5001/api/documents/', {
+      const res = await axios.get(`${API_URL}/documents/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDocuments(res.data);
@@ -54,7 +55,7 @@ const AdminDashboard = () => {
     formData.append('document_type', docType);
 
     try {
-      await axios.post('http://localhost:5001/api/documents/', formData, {
+      await axios.post(`${API_URL}/documents/`, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -75,7 +76,7 @@ const AdminDashboard = () => {
   const handleDelete = async (id: number) => {
     if (!window.confirm("Supprimer ce document ?")) return;
     try {
-      await axios.delete(`http://localhost:5001/api/documents/${id}`, {
+      await axios.delete(`${API_URL}/documents/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchDocuments();

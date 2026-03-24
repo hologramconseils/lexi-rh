@@ -4,6 +4,7 @@ import axios from 'axios';
 import { User as UserIcon, LogOut, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
+import { API_URL } from '../config';
 
 const Profile = () => {
   const { user, token, logout, login } = useAuth();
@@ -25,7 +26,7 @@ const Profile = () => {
       const payload: any = { email };
       if (password) payload.password = password;
       
-      const res = await axios.put('http://localhost:5001/api/users/me', payload, {
+      const res = await axios.put(`${API_URL}/users/me`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
