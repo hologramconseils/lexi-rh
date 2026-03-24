@@ -12,3 +12,4 @@ __pycache__
 env/
 .pytest_cache/
 .DS_Store
+backend/instance/lexi_rh.db
