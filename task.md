@@ -1,27 +1,14 @@
-# Tasks
+# Tasks - Lexi-RH Verification
 
-- [x] Diagnose search failure
-    - [x] Check if `document_chunks` are being created
-    - [x] Test the search logic manually with a script
-    - [x] Verify database connection and schema
-- [x] Fix search implementation
-- [x] Verify fix
-- [x] Production readiness for client
-    - [x] Add search on title field in Postgres search
-    - [x] Optimize search performance with GIN index (optional but recommended)
-    - [x] Verify environment variables for deployment
-- [x] Push changes to GitHub
-- [x] Provide instructions for Render reindexing
-- [x] Change Render region to Frankfurt
-- [x] Trigger reindex in Frankfurt and restore security
-- [x] Améliorer la richesse des recherches
-    - [x] Optimiser l'extraction PDF (nettoyage, blocs)
-    - [x] Affiner l'indexation (normalisation, chunks)
-    - [x] Optimiser ts_headline et extension de phrase
-    - [x] Relancer une réindexation globale
-- [x] Corriger l'interface et le branding
-- [x] Implémenter la recherche prédictive
-    - [x] Supprimer le label "Lexi-RH"
-    - [x] Ajouter l'endpoint /suggest au backend
-    - [x] Implémenter l'autocomplete au frontend
-    - [x] Vérifier la pertinence des suggestions
+- [x] Audit initial du projet
+    - [x] Vérifier l'état de `Navbar.tsx` (Responsive)
+    - [x] Vérifier le nettoyage des résultats dans `Dashboard.tsx`
+    - [x] Vérifier la cohérence des badges
+- [x] Lancement local pour vérification visuelle
+    - [x] Lancer le backend Flask
+    - [x] Lancer le frontend Vite
+    - [x] Tester la recherche et le responsive mobile via le navigateur
+- [x] Finalisation et Polish
+    - [x] Corriger d'éventuels reliquats d'UI (Badge xs)
+    - [x] Vérifier la configuration des variables d'environnement (`.env`)
+    - [x] Mettre à jour la documentation (Walkthrough)

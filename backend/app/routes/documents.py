@@ -16,12 +16,17 @@ def extract_text_from_pdf(file_stream):
         # "blocks" is better for flow than "text"
         blocks = page.get_text("blocks")
         for b in blocks:
-            if b[4].strip():
-                # b[4] is the text content of the block
-                clean_block = b[4].replace('\n', ' ').strip()
-                text_blocks.append(clean_block)
+            text = b[4].strip()
+            if text:
+                # Add a space at the end if it doesn't have one or punctuation
+                if not text[-1].isspace() and text[-1] not in '.!?,;:':
+                    text += " "
+                
+                # Simple deduplication: don't add if it's identical to the last block
+                if not text_blocks or text.strip() != text_blocks[-1].strip():
+                    text_blocks.append(text)
     
-    full_text = "\n\n".join(text_blocks)
+    full_text = "\n".join(text_blocks)
     return full_text
 
 @bp.route('/', methods=['POST'])

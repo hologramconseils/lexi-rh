@@ -24,13 +24,30 @@ class PgSearchService:
         chunk_size = 1500
 
         # Normalization
-        # 1. Remove hyphens at line breaks (e.g. "prépara- tion" -> "préparation")
+        # 1. Enforce space after punctuation if missing (e.g. "loi.Le" -> "loi. Le")
+        content = re.sub(r'([.!?])([A-ZÀ-ÖØ-ß])', r'\1 \2', content)
+        # 2. Fix stuck words (lowercase followed by uppercase without space, heuristic)
+        # e.g. "loiLe" -> "loi Le"
+        content = re.sub(r'([a-zà-öø-ÿ])([A-ZÀ-ÖØ-ß])', r'\1 \2', content)
+
+        # 3. Deduplicate consecutive identical sentences (often from PDF OCR artifacts)
+        sentences = re.split(r'(?<=[.!?])\s+', content)
+        unique_sentences = []
+        for s in sentences:
+            s_clean = s.strip()
+            # Canonicalize for comparison: lower, no period at end, no extra spaces
+            canonical = re.sub(r'\s+', ' ', s_clean.lower().rstrip('.'))
+            if s_clean and (not unique_sentences or canonical != unique_sentences[-1][1]):
+                unique_sentences.append((s, canonical))
+        content = " ".join([item[0] for item in unique_sentences])
+
+        # 4. Remove hyphens at line breaks (e.g. "prépara-\ntion" -> "préparation")
         content = re.sub(r'(\w)-\s*\n\s*(\w)', r'\1\2', content)
-        # 2. Replace newlines with spaces (unless it's a paragraph break)
+        # 5. Replace newlines with spaces (unless it's a paragraph break)
         content = re.sub(r'(?<!\n)\n(?!\n)', ' ', content)
-        # 3. Collapse multiple spaces
-        content = re.sub(r' +', ' ', content)
-        # 4. Collapse multiple paragraph breaks
+        # 6. Collapse multiple horizontal spaces and non-breaking spaces
+        content = re.sub(r'[^\S\n]+', ' ', content)
+        # 7. Collapse multiple paragraph breaks
         content = re.sub(r'\n\n+', '\n\n', content)
 
         # Split into blocks at paragraph or sentence boundaries
@@ -132,8 +149,7 @@ class PgSearchService:
                 d.title,
                 d.document_type,
                 dc.content,
-                1.0 as score,
-                dc.content as highlight
+                1.0 as score
             FROM document_chunks dc
             JOIN documents d ON d.id = dc.document_id
             WHERE dc.content LIKE :query OR d.title LIKE :query
@@ -142,7 +158,40 @@ class PgSearchService:
 
         try:
             result = db.session.execute(sql, {'query': search_pattern})
-            return self._format_results(result.fetchall())
+            rows = result.fetchall()
+            
+            # Simple manual highlighting for SQLite fallback
+            hits = []
+            for row in rows:
+                # Find query in content
+                content = row.content
+                # Case-insensitive find for better local dev experience
+                match = re.search(re.escape(query_text), content, re.IGNORECASE)
+                
+                if match:
+                    start, end = match.span()
+                    highlight = content[start:end]
+                    # Wrap with mark
+                    snippet = content[:start] + f"<mark>{highlight}</mark>" + content[end:]
+                    # Expand to sentence
+                    highlight_content = self._expand_to_full_sentences(snippet, content)
+                else:
+                    # If match was in title, just take first sentence
+                    highlight_content = self._expand_to_full_sentences(content[:200], content)
+
+                hits.append({
+                    '_source': {
+                        'document_id': row.document_id,
+                        'title': row.title,
+                        'document_type': row.document_type,
+                        'content': row.content,
+                    },
+                    '_score': 1.0,
+                    'highlight': {
+                        'content': [highlight_content]
+                    }
+                })
+            return hits
         except Exception as e:
             current_app.logger.error(f"SQLite Search Error: {e}")
             return []
@@ -173,48 +222,41 @@ class PgSearchService:
 
     def _expand_to_full_sentences(self, highlight, full_content):
         """Expands the highlight snippet to the nearest full sentence boundaries."""
-        # Remove markers to find the raw text in the content
+        # 1. Strip markers to find the raw text position in full_content
         raw_snippet = highlight.replace('<mark>', '').replace('</mark>', '')
         
-        # Find the snippet in the full content
-        start_idx = full_content.find(raw_snippet)
-        if start_idx == -1:
-            return highlight # Fallback if not found
+        # 2. Find the snippet in the full content
+        start_in_full = full_content.find(raw_snippet)
+        if start_in_full == -1:
+            # Fallback for ts_headline transformations
+            return highlight
 
-        end_idx = start_idx + len(raw_snippet)
+        # 3. Expand backwards to the start of the sentence
+        prefix_part = full_content[:start_in_full]
+        # Match start of sentence (after .!? followed by space, or start of string)
+        # and checking for a capital/digit as starting char
+        match_start = list(re.finditer(r'(?:[.!?]\s+|^)(?=[A-Z0-9À-ÖØ-ß])', prefix_part))
+        new_start = match_start[-1].end() if match_start else 0
 
-        # Expand backwards to start of sentence
-        # Look for [.!?] followed by space or start of string
-        search_start = full_content[:start_idx][::-1]
-        match_start = re.search(r'[.!?]\s', search_start)
-        if match_start:
-            new_start = start_idx - match_start.start()
-        else:
-            new_start = 0
+        # 4. Expand forwards to the end of the sentence
+        suffix_part = full_content[start_in_full + len(raw_snippet):]
+        # Match end of sentence (.!? followed by empty space or end of string)
+        match_end = re.search(r'[.!?](?:\s+|$)', suffix_part)
+        new_end = start_in_full + len(raw_snippet) + match_end.end() if match_end else len(full_content)
 
-        # Expand forwards to end of sentence
-        search_end = full_content[end_idx:]
-        match_end = re.search(r'[.!?](\s|$)', search_end)
-        if match_end:
-            new_end = end_idx + match_end.end()
-        else:
-            new_end = len(full_content)
-
-        expanded_raw = full_content[new_start:new_end].strip()
+        # 5. Build result by wrapping the original highlight (with its markers)
+        # with the leading and trailing context from the full_content
+        context_before = full_content[new_start:start_in_full]
+        context_after = full_content[start_in_full + len(raw_snippet):new_end]
         
-        # Now re-insert the marks by finding keywords from the original highlight
-        # This is tricky because ts_headline might have done stemming.
-        # However, ts_headline with <mark> usually marks the original words.
+        result = (context_before + highlight + context_after).strip()
         
-        # Simple approach: if the expanded text contains the original marks, we are good.
-        # But it doesn't. We need to re-apply marking.
-        # Actually, if we just use the original highlight but "padded" with the context 
-        # from the full_content, it's easier.
-        
-        prefix = full_content[new_start:start_idx]
-        suffix = full_content[end_idx:new_end]
-        
-        return (prefix + highlight + suffix).strip()
+        # Add termination period if missing for long snippets
+        if result and result[-1] not in '.!?':
+             if len(result) > 60:
+                 result += "."
+                 
+        return result
 
 
     def suggest(self, query_text, limit=5):
