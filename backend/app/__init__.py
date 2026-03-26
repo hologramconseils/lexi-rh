@@ -20,6 +20,11 @@ def create_app():
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    # Resend and Password Reset Configuration
+    app.config['RESEND_API_KEY'] = os.getenv('RESEND_API_KEY')
+    app.config['MAIL_FROM'] = os.getenv('MAIL_FROM', 'bertrand.saulnerond@hologramconseils.com')
+    app.config['FRONTEND_URL'] = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 
     # Initialize extensions
     db.init_app(app)
