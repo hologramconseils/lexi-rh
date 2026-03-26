@@ -59,6 +59,14 @@ const Dashboard = () => {
     return () => clearTimeout(debounceTimer);
   }, [query]);
 
+  // Automatically clear results and searched state if query is emptied
+  React.useEffect(() => {
+    if (query === '') {
+      setResults([]);
+      setSearched(false);
+    }
+  }, [query]);
+
   const handleSearch = async (e: React.FormEvent | string) => {
     if (typeof e !== 'string') e.preventDefault();
     const searchQuery = typeof e === 'string' ? e : query;
