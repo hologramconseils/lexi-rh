@@ -1,11 +1,12 @@
 // React imports implicitly handled by Vite/TS config
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 
 import { ThemeProvider } from './context/ThemeContext';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
-// src/App.tsx: Profile removed as it's not being used in routes
+import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import Dashboard from './pages/Dashboard';
@@ -19,10 +20,19 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" />} />
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+            
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
             
             <Route 
               path="/dashboard" 

@@ -40,7 +40,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'public', showBackButton = fa
               </button>
             )}
             
-            <Link to={variant === 'admin' ? "/profile" : "/"} className="flex items-center space-x-2 text-blue-600 dark:text-blue-500 hover:opacity-80 transition-opacity focus-visible:outline-none" title={variant === 'admin' ? "Informations du compte" : "Retour à l'accueil"}>
+            <Link to="/" className="flex items-center space-x-2 text-blue-600 dark:text-blue-500 hover:opacity-80 transition-opacity focus-visible:outline-none" title="Retour à l'accueil">
               <BookOpen className="w-7 h-7 sm:w-8 sm:h-8" />
               <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white truncate max-w-[120px] sm:max-w-none">
                 {navBrand}
