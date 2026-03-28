@@ -139,6 +139,39 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+        <div className="bg-white dark:bg-slate-800 shadow sm:rounded-lg mb-8 border border-slate-100 dark:border-slate-700 transition-colors">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="text-lg leading-6 font-medium text-slate-900 dark:text-white flex items-center mb-4">
+              <MessageSquare className="mr-2 h-5 w-5 text-green-500 dark:text-green-400" />
+              Gérer les accès Salariés
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                Créez des comptes pour vos salariés afin qu'ils puissent consulter vos documents via le moteur de recherche Lexi-RH.
+            </p>
+            <form onSubmit={async (e) => {
+                e.preventDefault();
+                const form = e.target as HTMLFormElement;
+                const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+                const password = (form.elements.namedItem('password') as HTMLInputElement).value;
+                try {
+                    await axios.post(`${API_URL}/auth/register-employee`, { email, password }, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    alert("Compte salarié créé avec succès.");
+                    form.reset();
+                } catch (err: any) {
+                    alert(err.response?.data?.error || "Erreur lors de la création.");
+                }
+            }} className="grid grid-cols-1 gap-y-4 sm:grid-cols-3 sm:gap-x-4">
+                <input name="email" type="email" placeholder="Email du salarié" required className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm" />
+                <input name="password" type="password" placeholder="Mot de passe" required className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm" />
+                <button type="submit" className="bg-green-600 text-white rounded-md py-2 px-4 hover:bg-green-700 transition-colors text-sm font-medium">
+                    Créer le compte Salarié
+                </button>
+            </form>
+          </div>
+        </div>
+
         <div className="bg-white dark:bg-slate-800 shadow sm:rounded-lg border border-slate-100 dark:border-slate-700 transition-colors">
           <div className="px-4 py-5 sm:px-6 border-b border-slate-200 dark:border-slate-700">
             <h3 className="text-lg leading-6 font-medium text-slate-900 dark:text-white flex items-center">

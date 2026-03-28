@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, current_app
 from app.models import db
 from app.models.user import User, PasswordResetToken
-from app.models.workspace import Workspace
 from app.utils.auth import generate_token, token_required
 
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')
@@ -191,3 +190,29 @@ def reset_password():
     current_app.logger.info(f"Password reset successful for user: {user.email}")
 
     return jsonify({"message": "Mot de passe réinitialisé avec succès"}), 200
+
+@bp.route('/register-employee', methods=['POST'])
+@token_required
+def register_employee(current_user):
+    """Allows an employer or admin to register a new employee for their workspace."""
+    if current_user.role not in ['employer', 'admin']:
+        return jsonify({'error': 'Permission denied. Only employers and admins can register employees.'}), 403
+        
+    data = request.get_json()
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'Email and password required'}), 400
+        
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({'error': 'Email already exists'}), 400
+        
+    new_user = User(
+        email=data['email'], 
+        role='employee',
+        workspace_id=current_user.workspace_id
+    )
+    new_user.set_password(data['password'])
+    
+    db.session.add(new_user)
+    db.session.commit()
+    
+    return jsonify({'message': 'Employee created successfully', 'user': new_user.to_dict()}), 201

@@ -22,13 +22,11 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
-            <Route path="/dashboard" element={<Dashboard />} />
-            
             <Route 
-              path="/profile" 
+              path="/dashboard" 
               element={
                 <ProtectedRoute allowedRoles={['employee', 'employer', 'admin']}>
-                  <Profile />
+                  <Dashboard />
                 </ProtectedRoute>
               } 
             />
@@ -36,7 +34,7 @@ function App() {
             <Route 
               path="/admin" 
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['employer', 'admin']}>
                   <AdminDashboard />
                 </ProtectedRoute>
               } 

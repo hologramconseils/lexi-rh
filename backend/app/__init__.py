@@ -30,10 +30,11 @@ def create_app():
     db.init_app(app)
     
     # Register blueprints
-    from app.routes import auth, documents, users
+    from app.routes import auth, documents, users, chat
     app.register_blueprint(auth.bp)
     app.register_blueprint(documents.bp)
     app.register_blueprint(users.bp)
+    app.register_blueprint(chat.bp)
     
     # Configure logging
     if not os.path.exists('logs'):
@@ -70,5 +71,6 @@ def create_db(app):
         import app.models.user
         import app.models.document
         import app.models.workspace
+        import app.models.conversation
         from app.services.pg_search_service import DocumentChunk
         db.create_all()
