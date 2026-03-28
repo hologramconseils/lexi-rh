@@ -3,7 +3,8 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Search, BookOpen, AlertCircle, Loader2, History, ChevronRight, MessageSquare } from 'lucide-react';
+import { Search, BookOpen, AlertCircle, Loader2, History, MessageSquare } from 'lucide-react';
+
 import { API_URL } from '../config';
 
 interface SearchHit {
@@ -20,7 +21,8 @@ interface SearchSession {
 }
 
 const Dashboard = () => {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
+
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchHit[]>([]);
   const [history, setHistory] = useState<SearchSession[]>([]);

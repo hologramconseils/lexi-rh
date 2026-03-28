@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, current_app
 from app.models import db
 from app.models.user import User, PasswordResetToken
+from app.models.workspace import Workspace
 from app.utils.auth import generate_token, token_required
 
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')

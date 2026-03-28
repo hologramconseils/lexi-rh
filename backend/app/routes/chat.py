@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models import db
 from app.models.conversation import Conversation, Message
+from app.models.workspace import Workspace
 from app.utils.auth import token_required
 from app.services.pg_search_service import pg_search_service
 
@@ -18,6 +19,17 @@ def ask_question(current_user):
     conv_id = data.get('conversation_id')
     
     # 1. Get/Create search session (history)
+    if not current_user.workspace_id:
+        # Fallback for un-migrated users: try to find a workspace or create a generic one
+        # This prevents 500 IntegrityError on Conversation table
+        ws = Workspace.query.filter(Workspace.name.ilike("%Administration%")).first()
+        if not ws:
+            ws = Workspace(name="Espace par défaut")
+            db.session.add(ws)
+            db.session.flush()
+        current_user.workspace_id = ws.id
+        db.session.commit()
+
     if conv_id:
         conversation = Conversation.query.filter_by(id=conv_id, user_id=current_user.id).first_or_404()
     else:
@@ -28,7 +40,11 @@ def ask_question(current_user):
             title=title
         )
         db.session.add(conversation)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': 'Erreur lors de la création de la session de recherche.'}), 500
         
     # 2. Store user search query in history
     user_msg = Message(conversation_id=conversation.id, content=query, is_user=True)

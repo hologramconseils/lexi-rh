@@ -1,13 +1,15 @@
 // React imports implicitly handled by Vite/TS config
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+
 import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
+// src/App.tsx: Profile removed as it's not being used in routes
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
+
 
 const Unauthorized = () => <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-8 text-2xl font-bold text-red-600 flex justify-center items-center">Accès Refusé</div>;
 
