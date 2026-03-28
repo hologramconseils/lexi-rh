@@ -10,28 +10,30 @@ import io
 bp = Blueprint('documents', __name__, url_prefix='/api/documents')
 
 def extract_text_from_pdf(file_stream):
+    # ... (existing extract_text_from_pdf logic)
     doc = fitz.open(stream=file_stream.read(), filetype="pdf")
     text_blocks = []
     for page in doc:
-        # "blocks" is better for flow than "text"
         blocks = page.get_text("blocks")
         for b in blocks:
             text = b[4].strip()
             if text:
-                # Add a space at the end if it doesn't have one or punctuation
                 if not text[-1].isspace() and text[-1] not in '.!?,;:':
                     text += " "
-                
-                # Simple deduplication: don't add if it's identical to the last block
                 if not text_blocks or text.strip() != text_blocks[-1].strip():
                     text_blocks.append(text)
-    
     full_text = "\n".join(text_blocks)
     return full_text
 
 @bp.route('/', methods=['POST'])
-@admin_required
+@token_required
 def upload_document(current_user):
+    if current_user.role not in ['employer', 'admin']:
+        return jsonify({'error': 'Permission denied. Only employers and admins can upload resources.'}), 403
+        
+    if not current_user.workspace_id and current_user.role != 'admin':
+        return jsonify({'error': 'User has no associated workspace.'}), 400
+
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
         
@@ -64,7 +66,8 @@ def upload_document(current_user):
         title=title,
         document_type=doc_type,
         content_text=content_text,
-        uploaded_by=current_user.id
+        uploaded_by=current_user.id,
+        workspace_id=current_user.workspace_id
     )
     db.session.add(new_doc)
     db.session.commit()
@@ -86,13 +89,22 @@ def upload_document(current_user):
 @bp.route('/', methods=['GET'])
 @token_required
 def list_documents(current_user):
-    docs = Document.query.order_by(Document.uploaded_at.desc()).all()
+    # Filter by workspace_id
+    query = Document.query
+    if current_user.role != 'admin' or current_user.workspace_id:
+        query = query.filter_by(workspace_id=current_user.workspace_id)
+        
+    docs = query.order_by(Document.uploaded_at.desc()).all()
     return jsonify([d.to_dict() for d in docs])
 
 @bp.route('/<int:doc_id>', methods=['DELETE'])
-@admin_required
+@token_required
 def delete_document(current_user, doc_id):
     doc = Document.query.get_or_404(doc_id)
+    
+    # Check permission: Only admin or the workspace owner can delete
+    if current_user.role != 'admin' and doc.workspace_id != current_user.workspace_id:
+        return jsonify({'error': 'Permission denied'}), 403
     
     pg_search_service.delete_document(doc_id)
     
@@ -102,12 +114,18 @@ def delete_document(current_user, doc_id):
     return jsonify({'message': 'Document deleted successfully'})
 
 @bp.route('/search', methods=['GET'])
-def search_documents():
+@token_required
+def search_documents(current_user):
     query = request.args.get('q', '')
     if not query:
         return jsonify([])
         
-    results = pg_search_service.search(query)
+    # Strictly filter by user's workspace_id
+    workspace_id = current_user.workspace_id
+    if not workspace_id and current_user.role != 'admin':
+         return jsonify({'error': 'User has no associated workspace.'}), 400
+         
+    results = pg_search_service.search(query, workspace_id=workspace_id)
     formatted_results = []
     for hit in results:
         source = hit['_source']
@@ -122,17 +140,23 @@ def search_documents():
     return jsonify(formatted_results)
 
 @bp.route('/suggest', methods=['GET'])
-def suggest_documents():
+@token_required
+def suggest_documents(current_user):
     query = request.args.get('q', '')
     if not query or len(query.strip()) < 2:
         return jsonify([])
+    
+    workspace_id = current_user.workspace_id
+    if not workspace_id and current_user.role != 'admin':
+        return jsonify([])
         
-    suggestions = pg_search_service.suggest(query)
+    suggestions = pg_search_service.suggest(query, workspace_id=workspace_id)
     return jsonify(suggestions)
 
 @bp.route('/reindex', methods=['POST'])
 @admin_required
 def trigger_reindex(current_user):
+    # ... (existing trigger_reindex logic)
     from reindex_all import reindex_all
     try:
         reindex_all()

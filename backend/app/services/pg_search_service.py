@@ -94,7 +94,7 @@ class PgSearchService:
         DocumentChunk.query.filter_by(document_id=doc_id).delete()
         db.session.commit()
 
-    def search(self, query_text):
+    def search(self, query_text, workspace_id=None):
         """Full-text search with dialect detection (Postgres/SQLite)."""
         if not query_text or not query_text.strip():
             return []
@@ -102,15 +102,22 @@ class PgSearchService:
         dialect = db.engine.name
         
         if dialect == 'postgresql':
-            return self._search_postgres(query_text)
+            return self._search_postgres(query_text, workspace_id=workspace_id)
         else:
-            return self._search_sqlite(query_text)
+            return self._search_sqlite(query_text, workspace_id=workspace_id)
 
-    def _search_postgres(self, query_text):
+    def _search_postgres(self, query_text, workspace_id=None):
         """Full-text search using Postgres searching both title and content."""
         # websearch_to_tsquery for user-friendly query parsing
         # setweight('A') for title, 'B' for content to prioritize title matches
-        sql = text("""
+        
+        workspace_filter = ""
+        params = {'query': query_text}
+        if workspace_id:
+            workspace_filter = "AND d.workspace_id = :workspace_id"
+            params['workspace_id'] = workspace_id
+
+        sql = text(f"""
             SELECT 
                 dc.document_id,
                 d.title,
@@ -128,22 +135,29 @@ class PgSearchService:
             JOIN documents d ON d.id = dc.document_id
             WHERE 
                 (to_tsvector('french', d.title) || to_tsvector('french', dc.content)) @@ websearch_to_tsquery('french', :query)
+                {workspace_filter}
             ORDER BY score DESC
             LIMIT 15
         """)
 
         try:
-            result = db.session.execute(sql, {'query': query_text})
+            result = db.session.execute(sql, params)
             return self._format_results(result.fetchall())
         except Exception as e:
             current_app.logger.error(f"PG Search Error: {e}")
             return []
 
-    def _search_sqlite(self, query_text):
+    def _search_sqlite(self, query_text, workspace_id=None):
         """Fallback search for SQLite using LIKE (no highlighting natively)."""
-        # Since SQLite lacks native French TS, we use a simpler approach for local dev
         search_pattern = f"%{query_text}%"
-        sql = text("""
+        
+        workspace_filter = ""
+        params = {'query': search_pattern}
+        if workspace_id:
+            workspace_filter = "AND d.workspace_id = :workspace_id"
+            params['workspace_id'] = workspace_id
+
+        sql = text(f"""
             SELECT 
                 dc.document_id,
                 d.title,
@@ -152,31 +166,27 @@ class PgSearchService:
                 1.0 as score
             FROM document_chunks dc
             JOIN documents d ON d.id = dc.document_id
-            WHERE dc.content LIKE :query OR d.title LIKE :query
+            WHERE (dc.content LIKE :query OR d.title LIKE :query)
+                  {workspace_filter}
             LIMIT 15
         """)
 
         try:
-            result = db.session.execute(sql, {'query': search_pattern})
+            result = db.session.execute(sql, params)
             rows = result.fetchall()
             
             # Simple manual highlighting for SQLite fallback
             hits = []
             for row in rows:
-                # Find query in content
                 content = row.content
-                # Case-insensitive find for better local dev experience
                 match = re.search(re.escape(query_text), content, re.IGNORECASE)
                 
                 if match:
                     start, end = match.span()
                     highlight = content[start:end]
-                    # Wrap with mark
                     snippet = content[:start] + f"<mark>{highlight}</mark>" + content[end:]
-                    # Expand to sentence
                     highlight_content = self._expand_to_full_sentences(snippet, content)
                 else:
-                    # If match was in title, just take first sentence
                     highlight_content = self._expand_to_full_sentences(content[:200], content)
 
                 hits.append({
@@ -194,6 +204,87 @@ class PgSearchService:
             return hits
         except Exception as e:
             current_app.logger.error(f"SQLite Search Error: {e}")
+            return []
+
+    def suggest(self, query_text, limit=5, workspace_id=None):
+        """Get autocomplete suggestions from titles and content."""
+        if not query_text or len(query_text.strip()) < 2:
+            return []
+
+        dialect = db.engine.name
+        
+        workspace_filter = ""
+        params = {'limit': limit}
+        if workspace_id:
+            workspace_filter = "AND d.workspace_id = :workspace_id"
+            params['workspace_id'] = workspace_id
+
+        if dialect != 'postgresql':
+            # Basic fallback for SQLite
+            params['pattern'] = f"{query_text}%"
+            sql = text(f"SELECT DISTINCT title FROM documents d WHERE title LIKE :pattern {workspace_filter} LIMIT :limit")
+            try:
+                result = db.session.execute(sql, params)
+                return [row[0] for row in result.fetchall()]
+            except:
+                return []
+
+        # Postgres implementation
+        prefix_pattern = f"%{query_text}%"
+        clean_query = re.sub(r'[^\w\s]', '', query_text).strip()
+        if not clean_query:
+            return []
+        ts_query = " & ".join(f"{word}:*" for word in clean_query.split())
+        
+        params.update({
+            'prefix_pattern': prefix_pattern, 
+            'ts_query': ts_query
+        })
+
+        sql = text(f"""
+            WITH suggestions AS (
+                -- Match in titles
+                SELECT 
+                    d.title as suggestion,
+                    1 as rank_order
+                FROM documents d
+                WHERE d.title ILIKE :prefix_pattern
+                {workspace_filter}
+                
+                UNION ALL
+                
+                -- Match in content (extract a short phrase)
+                SELECT 
+                    ts_headline('french', dc.content, to_tsquery('french', :ts_query),
+                        'StartSel="", StopSel="", MaxWords=8, MinWords=3, ShortWord=3'
+                    ) as suggestion,
+                    2 as rank_order
+                FROM document_chunks dc
+                JOIN documents d ON d.id = dc.document_id
+                WHERE to_tsvector('french', dc.content) @@ to_tsquery('french', :ts_query)
+                {workspace_filter}
+            )
+            SELECT DISTINCT LOWER(suggestion) as suggestion, MIN(rank_order) as min_rank
+            FROM suggestions
+            WHERE suggestion IS NOT NULL AND length(suggestion) > 3 AND suggestion !~ '^\\s*$'
+            GROUP BY LOWER(suggestion)
+            ORDER BY min_rank ASC, LOWER(suggestion) ASC
+            LIMIT :limit
+        """)
+
+        try:
+            result = db.session.execute(sql, params)
+            
+            suggestions = []
+            for row in result.fetchall():
+                s = row[0].replace('...', '').strip()
+                if s:
+                    s = s[0].upper() + s[1:]
+                    suggestions.append(s)
+                    
+            return suggestions[:limit]
+        except Exception as e:
+            current_app.logger.error(f"Suggest Error: {e}")
             return []
 
     def _format_results(self, rows):
@@ -257,86 +348,6 @@ class PgSearchService:
                  result += "."
                  
         return result
-
-
-    def suggest(self, query_text, limit=5):
-        """Get autocomplete suggestions from titles and content."""
-        if not query_text or len(query_text.strip()) < 2:
-            return []
-
-        dialect = db.engine.name
-        if dialect != 'postgresql':
-            # Basic fallback for SQLite
-            search_pattern = f"{query_text}%"
-            sql = text("SELECT DISTINCT title FROM documents WHERE title LIKE :pattern LIMIT :limit")
-            try:
-                result = db.session.execute(sql, {'pattern': search_pattern, 'limit': limit})
-                return [row[0] for row in result.fetchall()]
-            except:
-                return []
-
-        # Postgres implementation
-        # 1. Matches in titles (highest priority)
-        # 2. Matches in content (short snippets)
-        # We use a subquery to gather distinct suggestions and rank them
-        sql = text("""
-            WITH suggestions AS (
-                -- Match in titles
-                SELECT 
-                    d.title as suggestion,
-                    1 as rank_order
-                FROM documents d
-                WHERE d.title ILIKE :prefix_pattern
-                
-                UNION ALL
-                
-                -- Match in content (extract a short phrase)
-                -- We use ts_headline to get a very short, clean fragment
-                SELECT 
-                    ts_headline('french', dc.content, to_tsquery('french', :ts_query),
-                        'StartSel="", StopSel="", MaxWords=8, MinWords=3, ShortWord=3'
-                    ) as suggestion,
-                    2 as rank_order
-                FROM document_chunks dc
-                WHERE to_tsvector('french', dc.content) @@ to_tsquery('french', :ts_query)
-            )
-            SELECT DISTINCT LOWER(suggestion) as suggestion, MIN(rank_order) as min_rank
-            FROM suggestions
-            WHERE suggestion IS NOT NULL AND length(suggestion) > 3 AND suggestion !~ '^\\s*$'
-            GROUP BY LOWER(suggestion)
-            ORDER BY min_rank ASC, LOWER(suggestion) ASC
-            LIMIT :limit
-        """)
-
-        try:
-            # Prepare prefix for ILIKE and ts_query
-            prefix_pattern = f"%{query_text}%"
-            # For ts_query, we use prefix matching :*
-            # Clean non-alphanumeric for safety and add :*
-            clean_query = re.sub(r'[^\w\s]', '', query_text).strip()
-            if not clean_query:
-                return []
-            ts_query = " & ".join(f"{word}:*" for word in clean_query.split())
-
-            result = db.session.execute(sql, {
-                'prefix_pattern': prefix_pattern, 
-                'ts_query': ts_query,
-                'limit': limit
-            })
-            
-            # Clean up the output (remove ellipses if any from ts_headline)
-            suggestions = []
-            for row in result.fetchall():
-                s = row[0].replace('...', '').strip()
-                # Capitalize first letter
-                if s:
-                    s = s[0].upper() + s[1:]
-                    suggestions.append(s)
-                    
-            return suggestions[:limit]
-        except Exception as e:
-            current_app.logger.error(f"Suggest Error: {e}")
-            return []
 
 
 pg_search_service = PgSearchService()

@@ -11,6 +11,9 @@ class Document(db.Model):
     es_index_id = db.Column(db.String(255))
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
     uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    workspace_id = db.Column(db.Integer, db.ForeignKey('workspaces.id'), nullable=True)
+
+    workspace = db.relationship('Workspace', backref=db.backref('documents', lazy=True))
 
     def to_dict(self):
         return {
@@ -18,5 +21,6 @@ class Document(db.Model):
             'title': self.title,
             'document_type': self.document_type,
             'uploaded_at': self.uploaded_at.isoformat() if self.uploaded_at else None,
-            'uploaded_by': self.uploaded_by
+            'uploaded_by': self.uploaded_by,
+            'workspace_id': self.workspace_id
         }
