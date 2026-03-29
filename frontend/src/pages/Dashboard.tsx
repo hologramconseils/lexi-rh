@@ -12,6 +12,7 @@ interface SearchHit {
   title: string;
   type: string;
   extracts: string[];
+  reference?: string;
 }
 
 interface SearchSession {
@@ -258,7 +259,9 @@ const Dashboard = () => {
                       />
                     ))}
                     <div className="mt-8 flex justify-end">
-                        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">Verbatim Protection Enabled — No AI Generation</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest border-t border-slate-100 dark:border-slate-700 pt-3 w-full text-right">
+                          Source : {result.title} {result.reference && `— ${result.reference}`}
+                        </span>
                     </div>
                   </div>
                 </div>

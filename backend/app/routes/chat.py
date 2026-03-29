@@ -64,7 +64,8 @@ def ask_question(current_user):
             'document_id': source.get('document_id'),
             'title': source.get('title'),
             'type': source.get('document_type'),
-            'extracts': highlights
+            'extracts': highlights,
+            'reference': source.get('reference')
         })
         
     # 5. For search history, we store a summary or the top result snippet?

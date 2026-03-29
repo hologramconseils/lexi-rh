@@ -303,6 +303,7 @@ class PgSearchService:
                     'title': row.title,
                     'document_type': row.document_type,
                     'content': row.content,
+                    'reference': self._extract_reference(row.highlight, row.content)
                 },
                 '_score': float(row.score),
                 'highlight': {
@@ -348,6 +349,46 @@ class PgSearchService:
                  result += "."
                  
         return result
+
+    def _extract_reference(self, highlight, full_content):
+        """Attempts to find the nearest structural header (Article, Section) backward from the highlight."""
+        # 1. Strip markers to find the raw text position
+        raw_snippet = highlight.replace('<mark>', '').replace('</mark>', '')
+        
+        # 2. Find the snippet in the content
+        start_pos = full_content.find(raw_snippet)
+        if start_pos == -1:
+            return None
+
+        # 3. Look backward for "Article X", "Art. X", "Section X", "Alinéa X"
+        # We look in the preceding 2000 characters if possible
+        lookback_limit = max(0, start_pos - 2000)
+        prefix = full_content[lookback_limit:start_pos]
+        
+        # Patterns to find (most recent first)
+        # 1. Article
+        articles = list(re.finditer(r'(Article\s+[\d\-A-Z]+|Art\.\s+[\d\-A-Z]+)', prefix, re.IGNORECASE))
+        # 2. Section
+        sections = list(re.finditer(r'(Section\s+[IVX]+|Section\s+\d+)', prefix, re.IGNORECASE))
+        # 3. Alinéa
+        alineas = list(re.finditer(r'(Alinéa\s+\d+)', prefix, re.IGNORECASE))
+
+        ref_parts = []
+        if sections:
+            ref_parts.append(sections[-1].group(1))
+        if articles:
+            ref_parts.append(articles[-1].group(1))
+        if alineas:
+            ref_parts.append(alineas[-1].group(1))
+
+        if not ref_parts:
+            # Maybe the match ITSELF is an article or starts with one
+            self_match = re.search(r'^(Article\s+[\d\-A-Z]+|Art\.\s+[\d\-A-Z]+)', raw_snippet, re.IGNORECASE)
+            if self_match:
+                return self_match.group(1)
+            return None
+
+        return " — ".join(ref_parts)
 
 
 pg_search_service = PgSearchService()
