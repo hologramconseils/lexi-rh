@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, ShieldCheck, Zap, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { BookOpen, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -81,24 +81,13 @@ const Landing: React.FC = () => {
         {/* Cta Section */}
         <section className="py-20">
            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-10 sm:p-16 text-center text-white relative overflow-hidden shadow-2xl shadow-blue-600/20">
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-10 sm:p-12 text-center text-white relative overflow-hidden shadow-2xl shadow-blue-600/20">
                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-                 <h2 className="text-3xl sm:text-4xl font-extrabold mb-6 relative">Prêt à moderniser votre gestion RH ?</h2>
-                 <p className="text-lg text-blue-100 mb-10 max-w-2xl mx-auto relative opacity-90 font-medium font-inter">
+                 <h2 className="text-3xl sm:text-4xl font-extrabold mb-4 relative">Prêt à moderniser votre gestion RH ?</h2>
+                 <p className="text-lg text-blue-100 max-w-2xl mx-auto relative opacity-90 font-medium font-inter">
                     Accédez simplement à la documentation de votre entreprise avec Lexi-RH.
                  </p>
-                  <div className="flex flex-wrap items-center justify-center gap-6 relative">
-                    <div className="flex flex-col text-left">
-                       <div className="flex items-center space-x-2 text-sm text-blue-100 mb-1">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Installation instantanée</span>
-                       </div>
-                       <div className="flex items-center space-x-2 text-sm text-blue-100">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Conforme RGPD</span>
-                       </div>
-                    </div>
-                 </div>
+                  {/* Textes supprimés p/ PRD */}
               </div>
            </div>
         </section>
