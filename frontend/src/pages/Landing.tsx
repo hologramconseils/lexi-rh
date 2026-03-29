@@ -38,14 +38,8 @@ const Landing: React.FC = () => {
                   to="/login" 
                   className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 transition-all shadow-lg hover:shadow-blue-500/25 flex items-center justify-center group"
                 >
-                  Espace Employeur
+                  Espace sécurisé
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link 
-                  to="/dashboard" 
-                  className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700 shadow-sm"
-                >
-                  Consulter mes documents
                 </Link>
               </div>
             </div>
@@ -97,10 +91,7 @@ const Landing: React.FC = () => {
                  <p className="text-lg text-blue-100 mb-10 max-w-2xl mx-auto relative opacity-90 font-medium">
                     Rejoignez les entreprises qui font confiance à Lexi-RH pour simplifier l’accès à l’information de votre entreprise.
                  </p>
-                 <div className="flex flex-wrap items-center justify-center gap-6 relative">
-                    <Link to="/login" className="px-8 py-4 bg-white text-blue-700 font-bold rounded-2xl hover:bg-blue-50 transition-all shadow-xl">
-                       Commencer maintenant
-                    </Link>
+                  <div className="flex flex-wrap items-center justify-center gap-6 relative">
                     <div className="flex flex-col text-left">
                        <div className="flex items-center space-x-2 text-sm text-blue-100 mb-1">
                           <CheckCircle2 className="w-4 h-4" />

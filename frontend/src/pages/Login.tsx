@@ -92,7 +92,7 @@ const Login: React.FC = () => {
           <BookOpen className="w-12 h-12" />
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-white">
-          Lexi-RH Admin
+          Lexi-RH
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
           Gestion de l'espace employeur
