@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
@@ -21,9 +21,11 @@ const AdminDashboard = () => {
   const [docType, setDocType] = useState('Code du travail');
   const [loading, setLoading] = useState(false);
   const [showEmployeePassword, setShowEmployeePassword] = useState(false);
+  const [employeeEmail, setEmployeeEmail] = useState('');
+  const [employeePassword, setEmployeePassword] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     try {
       const res = await axios.get(`${API_URL}/documents/`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -32,11 +34,11 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) fetchDocuments();
-  }, [token]);
+  }, [token, fetchDocuments]);
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +101,7 @@ const AdminDashboard = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Catégorie Juridique</label>
-                  <select value={docType} onChange={e => setDocType(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors">
+                  <select value={docType} onChange={e => setDocType(e.target.value)} title="Catégorie Juridique" className="mt-1 block w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors">
                     <option>Code du travail</option>
                     <option>Conventions collectives</option>
                     <option>Accords d'entreprise</option>
@@ -149,48 +151,89 @@ const AdminDashboard = () => {
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
                 Créez des comptes pour vos salariés afin qu'ils puissent consulter vos documents via le moteur de recherche Lexi-RH.
             </p>
-            <form onSubmit={async (e) => {
-                e.preventDefault();
-                const form = e.target as HTMLFormElement;
-                const email = (form.elements.namedItem('email') as HTMLInputElement).value;
-                const password = (form.elements.namedItem('password') as HTMLInputElement).value;
-                try {
-                    await axios.post(`${API_URL}/auth/register-employee`, { email, password }, {
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-4 items-end">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Email</label>
+                    <input 
+                      type="email" 
+                      value={employeeEmail}
+                      onChange={(e) => setEmployeeEmail(e.target.value)}
+                      placeholder="Email du salarié" 
+                      required 
+                      className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                    />
+                  </div>
+                  <div className="relative">
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Mot de passe (pour création)</label>
+                    <input 
+                      type={showEmployeePassword ? "text" : "password"} 
+                      value={employeePassword}
+                      onChange={(e) => setEmployeePassword(e.target.value)}
+                      placeholder="Mot de passe" 
+                      className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm focus:ring-blue-500 focus:border-blue-500 transition-colors pr-10" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEmployeePassword(!showEmployeePassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 mt-5 transition-colors focus:outline-none"
+                      title={showEmployeePassword ? "Cacher" : "Afficher"}
+                    >
+                      {showEmployeePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+                <button 
+                  onClick={async () => {
+                    if (!employeeEmail || !employeePassword) {
+                      alert("Email et mot de passe requis pour la création.");
+                      return;
+                    }
+                    try {
+                      await axios.post(`${API_URL}/auth/register-employee`, { email: employeeEmail, password: employeePassword }, {
                         headers: { Authorization: `Bearer ${token}` }
-                    });
-                    alert("Compte salarié créé avec succès.");
-                    form.reset();
-                    setShowEmployeePassword(false);
-                } catch (err: any) {
-                    alert(err.response?.data?.error || "Erreur lors de la création.");
-                }
-            }} className="grid grid-cols-1 gap-y-4 sm:grid-cols-3 sm:gap-x-4 items-end">
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Email</label>
-                  <input name="email" type="email" placeholder="Email du salarié" required className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm focus:ring-blue-500 focus:border-blue-500 transition-colors" />
-                </div>
-                <div className="relative">
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Mot de passe</label>
-                  <input 
-                    name="password" 
-                    type={showEmployeePassword ? "text" : "password"} 
-                    placeholder="Mot de passe" 
-                    required 
-                    className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm focus:ring-blue-500 focus:border-blue-500 transition-colors pr-10" 
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowEmployeePassword(!showEmployeePassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 mt-5 transition-colors focus:outline-none"
-                    title={showEmployeePassword ? "Cacher" : "Afficher"}
-                  >
-                    {showEmployeePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <button type="submit" className="bg-green-600 text-white rounded-md py-2 px-4 hover:bg-green-700 transition-colors text-sm font-medium h-[38px] flex items-center justify-center shadow-sm">
+                      });
+                      alert("Compte salarié créé avec succès.");
+                      setEmployeeEmail('');
+                      setEmployeePassword('');
+                      setShowEmployeePassword(false);
+                    } catch (err: unknown) {
+                      const message = (err as any).response?.data?.error || "Erreur lors de la création.";
+                      alert(message);
+                    }
+                  }}
+                  className="flex-1 bg-green-600 text-white rounded-md py-2.5 px-4 hover:bg-green-700 transition-colors text-sm font-bold shadow-sm flex items-center justify-center h-[42px]"
+                >
                     Créer le compte Salarié
                 </button>
-            </form>
+                <button 
+                  onClick={async () => {
+                    if (!employeeEmail) {
+                      alert("Email requis pour révoquer un accès.");
+                      return;
+                    }
+                    if (!window.confirm(`Êtes-vous sûr de vouloir révoquer l'accès pour ${employeeEmail} ?`)) return;
+                    try {
+                      await axios.delete(`${API_URL}/auth/employee`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                        data: { email: employeeEmail }
+                      });
+                      alert("Accès salarié révoqué avec succès.");
+                      setEmployeeEmail('');
+                      setEmployeePassword('');
+                    } catch (err: unknown) {
+                      const message = (err as any).response?.data?.error || "Erreur lors de la révocation.";
+                      alert(message);
+                    }
+                  }}
+                  className="flex-1 bg-red-500 text-white rounded-md py-2.5 px-4 hover:bg-red-600 transition-colors text-sm font-bold shadow-sm flex items-center justify-center h-[42px]"
+                >
+                    Révoquer l'accès / Supprimer
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

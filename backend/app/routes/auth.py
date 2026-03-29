@@ -216,3 +216,32 @@ def register_employee(current_user):
     db.session.commit()
     
     return jsonify({'message': 'Employee created successfully', 'user': new_user.to_dict()}), 201
+@bp.route('/employee', methods=['DELETE'])
+@token_required
+def delete_employee(current_user):
+    """Allows an employer or admin to revoke access for an employee in their workspace."""
+    if current_user.role not in ['employer', 'admin']:
+        return jsonify({'error': 'Permission denied. Only employers and admins can revoke access.'}), 403
+        
+    data = request.get_json()
+    if not data or not data.get('email'):
+        return jsonify({'error': 'Employee email required'}), 400
+        
+    email = data.get('email')
+    employee = User.query.filter_by(
+        email=email, 
+        role='employee', 
+        workspace_id=current_user.workspace_id
+    ).first()
+    
+    if not employee:
+        return jsonify({'error': 'Employee not found in your workspace.'}), 404
+        
+    try:
+        db.session.delete(employee)
+        db.session.commit()
+        return jsonify({'message': f'Access for {email} has been revoked.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error revoking access for {email}: {e}")
+        return jsonify({'error': 'Internal server error during revocation.'}), 500
