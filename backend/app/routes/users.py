@@ -13,6 +13,8 @@ def update_profile(current_user):
         return jsonify({'error': 'No data provided'}), 400
         
     if 'email' in data and data['email'] != current_user.email:
+        if current_user.role == 'employee':
+            return jsonify({'error': 'Employees cannot change their email address.'}), 403
         existing = User.query.filter_by(email=data['email']).first()
         if existing:
             return jsonify({'error': 'Email already in use'}), 400

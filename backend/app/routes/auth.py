@@ -79,9 +79,8 @@ def register():
     if User.query.filter_by(email=data['email']).first():
         return jsonify({'error': 'Email already exists'}), 400
         
-    role = data.get('role', 'employee')
-    if role not in ['employee', 'employer', 'admin']:
-        role = 'employee'
+    # Public registration is only for employers
+    role = 'employer'
         
     new_user = User(email=data['email'], role=role)
     new_user.set_password(data['password'])

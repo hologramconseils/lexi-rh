@@ -68,9 +68,15 @@ const Profile = () => {
                 <input
                   type="email"
                   value={email}
+                  disabled={user?.role === 'employee'}
                   onChange={e => setEmail(e.target.value)}
-                  className="block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-white transition-colors"
+                  className={`block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-white transition-colors ${user?.role === 'employee' ? 'opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}
                 />
+                {user?.role === 'employee' && (
+                  <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                    Votre identifiant (email) ne peut être modifié que par votre administrateur.
+                  </p>
+                )}
               </div>
 
               <div>

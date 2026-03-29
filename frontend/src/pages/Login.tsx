@@ -47,9 +47,9 @@ const Login: React.FC = () => {
         await axios.post(`${API_URL}/auth/register`, {
           email,
           password,
-          role: 'admin' // Force the admin role as requested
+          role: 'employer' // Public registration always creates employer role
         });
-        setSuccess('Compte administrateur créé avec succès. Vous pouvez maintenant vous connecter.');
+        setSuccess('Compte employeur créé avec succès. Vous pouvez maintenant vous connecter.');
         setMode('login');
         setPassword('');
         setConfirmPassword('');
@@ -116,9 +116,10 @@ const Login: React.FC = () => {
               type="button"
               onClick={() => { setMode('register'); resetForm(); }}
               className={`flex-1 pb-2 text-sm font-medium border-b-2 transition-colors ${mode === 'register' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'}`}
+              title="Inscription Employeur / RH uniquement"
             >
               <UserPlus className="w-4 h-4 mx-auto mb-1" />
-              Inscription
+              Inscription (RH)
             </button>
             <button
               type="button"
@@ -129,6 +130,18 @@ const Login: React.FC = () => {
               Mdp. oublié
             </button>
           </div>
+          
+          {mode === 'login' && (
+            <p className="text-center text-xs text-slate-500 dark:text-slate-400 mb-6 px-4">
+              <strong>Point d'accès unique</strong> : Connectez-vous ici que vous soyez Employeur / RH ou Salarié.
+            </p>
+          )}
+
+          {mode === 'register' && (
+            <p className="text-center text-xs text-blue-600 dark:text-blue-400 mb-6 px-4 font-medium animate-pulse">
+              Note : L'inscription est réservée aux employeurs. Les comptes salariés sont créés par l'administrateur.
+            </p>
+          )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
@@ -149,6 +162,8 @@ const Login: React.FC = () => {
                   type="email"
                   required
                   value={email}
+                  placeholder="votre@email.com"
+                  title="Adresse email"
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-white transition-colors"
                 />
@@ -165,6 +180,8 @@ const Login: React.FC = () => {
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
+                  placeholder="••••••••"
+                  title="Mot de passe"
                   onChange={(e) => setPassword(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white transition-colors"
                 />
@@ -189,6 +206,8 @@ const Login: React.FC = () => {
                     type={showPassword ? "text" : "password"}
                     required
                     value={confirmPassword}
+                    placeholder="••••••••"
+                    title="Confirmer le mot de passe"
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white transition-colors"
                   />
