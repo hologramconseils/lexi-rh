@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Trash2, Upload, FileText, MessageSquare } from 'lucide-react';
+import { Trash2, Upload, FileText, MessageSquare, Eye, EyeOff } from 'lucide-react';
 import { API_URL } from '../config';
 
 interface Document {
@@ -20,6 +20,7 @@ const AdminDashboard = () => {
   const [title, setTitle] = useState('');
   const [docType, setDocType] = useState('Code du travail');
   const [loading, setLoading] = useState(false);
+  const [showEmployeePassword, setShowEmployeePassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchDocuments = async () => {
@@ -159,13 +160,34 @@ const AdminDashboard = () => {
                     });
                     alert("Compte salarié créé avec succès.");
                     form.reset();
+                    setShowEmployeePassword(false);
                 } catch (err: any) {
                     alert(err.response?.data?.error || "Erreur lors de la création.");
                 }
-            }} className="grid grid-cols-1 gap-y-4 sm:grid-cols-3 sm:gap-x-4">
-                <input name="email" type="email" placeholder="Email du salarié" required className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm" />
-                <input name="password" type="password" placeholder="Mot de passe" required className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm" />
-                <button type="submit" className="bg-green-600 text-white rounded-md py-2 px-4 hover:bg-green-700 transition-colors text-sm font-medium">
+            }} className="grid grid-cols-1 gap-y-4 sm:grid-cols-3 sm:gap-x-4 items-end">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Email</label>
+                  <input name="email" type="email" placeholder="Email du salarié" required className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                </div>
+                <div className="relative">
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Mot de passe</label>
+                  <input 
+                    name="password" 
+                    type={showEmployeePassword ? "text" : "password"} 
+                    placeholder="Mot de passe" 
+                    required 
+                    className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm focus:ring-blue-500 focus:border-blue-500 transition-colors pr-10" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEmployeePassword(!showEmployeePassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 mt-5 transition-colors focus:outline-none"
+                    title={showEmployeePassword ? "Cacher" : "Afficher"}
+                  >
+                    {showEmployeePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <button type="submit" className="bg-green-600 text-white rounded-md py-2 px-4 hover:bg-green-700 transition-colors text-sm font-medium h-[38px] flex items-center justify-center shadow-sm">
                     Créer le compte Salarié
                 </button>
             </form>
