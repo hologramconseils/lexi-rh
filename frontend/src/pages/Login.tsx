@@ -95,7 +95,7 @@ const Login: React.FC = () => {
           Lexi-RH
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
-          Gestion de l'espace employeur
+          Gestion de votre espace sécurisé
         </p>
       </div>
 
