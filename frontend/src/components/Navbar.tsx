@@ -22,7 +22,6 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'public', showBackButton = fa
   };
 
   const navBrand = variant === 'admin' ? 'Lexi-RH Admin' : 'Lexi-RH';
-  const navBadge = variant === 'admin' ? 'Espace employeur / RH' : 'Espace Salarié';
 
   return (
     <nav className="bg-white dark:bg-slate-900 shadow border-b border-slate-200 dark:border-slate-800 transition-colors sticky top-0 z-50">
@@ -45,9 +44,6 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'public', showBackButton = fa
               <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white truncate max-w-[120px] sm:max-w-none">
                 {navBrand}
               </h1>
-              <span className="hidden xs:inline-block ml-2 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                {navBadge}
-              </span>
             </Link>
           </div>
 
@@ -68,11 +64,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'public', showBackButton = fa
                   <LogOut className="w-4 h-4 mr-1.5" /> Déconnexion
                 </button>
               </>
-            ) : (
-              <Link to="/login" className="flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
-                <UserIcon className="w-4 h-4 mr-1.5" /> Espace employeur / RH
-              </Link>
-            )}
+            ) : null}
           </div>
 
           {/* Mobile Right section: Theme toggle & Hamburger */}
@@ -131,18 +123,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'public', showBackButton = fa
                   </div>
                 </button>
               </>
-            ) : (
-              <Link
-                to="/login"
-                className="block px-3 py-2 rounded-md text-base font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <div className="flex items-center">
-                  <UserIcon className="w-5 h-5 mr-3" />
-                  Espace employeur / RH
-                </div>
-              </Link>
-            )}
+            ) : null}
           </div>
         </div>
       )}
