@@ -19,10 +19,6 @@ const Landing: React.FC = () => {
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
             <div className="text-center max-w-3xl mx-auto">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 mb-6 animate-in fade-in slide-in-from-top-4 duration-700">
-                <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-ping"></span>
-                <span className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-widest">Nouveau : Version Corporate 2026</span>
-              </div>
               
               <h1 className="text-5xl sm:text-6xl font-extrabold text-slate-900 dark:text-white mb-6 tracking-tight animate-in fade-in slide-in-from-bottom-4 duration-700 leading-tight text-balance">
                 Au service de votre <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">conformité RH</span>
