@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { BookOpen, Eye, EyeOff, Home, UserPlus, LogIn, KeyRound } from 'lucide-react';
+import { BookOpen, Eye, EyeOff, Home, UserPlus, LogIn, KeyRound, Shield } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import Footer from '../components/Footer';
 import { API_URL } from '../config';
@@ -18,8 +18,24 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  const { login } = useAuth();
+   const { login } = useAuth();
   const navigate = useNavigate();
+  const [hasAdmins, setHasAdmins] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/auth/status`);
+        setHasAdmins(res.data.has_admins);
+        if (!res.data.has_admins) {
+          setMode('register');
+        }
+      } catch (err) {
+        console.error("Could not check system status", err);
+      }
+    };
+    checkStatus();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,15 +77,16 @@ const Login: React.FC = () => {
         setPassword('');
         setConfirmPassword('');
       }
-    } catch (err: any) {
-      if (!err.response) {
+    } catch (err: unknown) {
+      const errorResponse = (err as any).response;
+      if (!errorResponse) {
         setError('Le serveur est injoignable. Veuillez vérifier votre connexion ou réessayer plus tard.');
-      } else if (err.response.status === 400 && err.response.data?.error === 'Email already exists') {
+      } else if (errorResponse.status === 400 && errorResponse.data?.error === 'Email already exists') {
         setError('Cet adresse email est déjà utilisée.');
-      } else if (err.response.status === 401) {
+      } else if (errorResponse.status === 401) {
         setError('Identifiants invalides. Veuillez réessayer.');
       } else {
-        setError(err.response?.data?.error || 'Une erreur est survenue.');
+        setError(errorResponse.data?.error || 'Une erreur est survenue.');
       }
     }
   };
@@ -138,9 +155,20 @@ const Login: React.FC = () => {
           )}
 
           {mode === 'register' && (
-            <p className="text-center text-xs text-blue-600 dark:text-blue-400 mb-6 px-4 font-medium animate-pulse">
-              Note : L'inscription est réservée aux employeurs. Les comptes salariés sont créés par l'administrateur.
-            </p>
+            <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <Shield className="h-5 w-5 text-blue-400" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                    {hasAdmins === false 
+                      ? "Configuration initiale : Créez le premier compte administrateur pour commencer."
+                      : "L'inscription est réservée aux employeurs. Les comptes salariés sont créés par l'administrateur."}
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>

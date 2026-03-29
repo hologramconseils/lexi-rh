@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Trash2, Upload, FileText, MessageSquare, Eye, EyeOff } from 'lucide-react';
+import { Trash2, Upload, FileText, MessageSquare, Eye, EyeOff, Shield } from 'lucide-react';
 import { API_URL } from '../config';
 
 interface Document {
@@ -23,6 +23,9 @@ const AdminDashboard = () => {
   const [showEmployeePassword, setShowEmployeePassword] = useState(false);
   const [employeeEmail, setEmployeeEmail] = useState('');
   const [employeePassword, setEmployeePassword] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchDocuments = useCallback(async () => {
@@ -231,6 +234,101 @@ const AdminDashboard = () => {
                   className="flex-1 bg-red-500 text-white rounded-md py-2.5 px-4 hover:bg-red-600 transition-colors text-sm font-bold shadow-sm flex items-center justify-center h-[42px]"
                 >
                     Révoquer l'accès / Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section Gérer les comptes Administrateurs */}
+        <div className="bg-white dark:bg-slate-800 shadow sm:rounded-lg border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors mt-8">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="text-lg leading-6 font-bold text-slate-900 dark:text-white flex items-center">
+              <Shield className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-500" />
+              Gestion des comptes Administrateurs
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                Ajoutez ou révoquez des droits d'administration pour votre espace Lexi-RH.
+            </p>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-4 items-end">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Email</label>
+                    <input 
+                      type="email" 
+                      value={adminEmail}
+                      onChange={(e) => setAdminEmail(e.target.value)}
+                      placeholder="Email de l'administrateur" 
+                      required 
+                      className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                    />
+                  </div>
+                  <div className="relative">
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Mot de passe (pour création)</label>
+                    <input 
+                      type={showAdminPassword ? "text" : "password"} 
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      placeholder="Mot de passe" 
+                      className="block w-full border border-slate-300 dark:border-slate-600 rounded-md py-2 px-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white sm:text-sm focus:ring-blue-500 focus:border-blue-500 transition-colors pr-10" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAdminPassword(!showAdminPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 mt-5 transition-colors focus:outline-none"
+                    >
+                      {showAdminPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+                <button 
+                  onClick={async () => {
+                    if (!adminEmail || !adminPassword) {
+                      alert("Email et mot de passe requis.");
+                      return;
+                    }
+                    try {
+                      await axios.post(`${API_URL}/auth/register-admin`, { email: adminEmail, password: adminPassword }, {
+                        headers: { Authorization: `Bearer ${token}` }
+                      });
+                      alert("Compte administrateur créé avec succès.");
+                      setAdminEmail('');
+                      setAdminPassword('');
+                      setShowAdminPassword(false);
+                    } catch (err: unknown) {
+                      const message = (err as any).response?.data?.error || "Erreur lors de la création.";
+                      alert(message);
+                    }
+                  }}
+                  className="flex-1 bg-blue-600 text-white rounded-md py-2.5 px-4 hover:bg-blue-700 transition-colors text-sm font-bold shadow-sm flex items-center justify-center h-[42px]"
+                >
+                    Ajouter un administrateur
+                </button>
+                <button 
+                  onClick={async () => {
+                    if (!adminEmail) {
+                      alert("Email requis pour révoquer un accès.");
+                      return;
+                    }
+                    if (!window.confirm(`Êtes-vous sûr de vouloir révoquer les droits d'administration pour ${adminEmail} ?`)) return;
+                    try {
+                      await axios.delete(`${API_URL}/auth/admin`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                        data: { email: adminEmail }
+                      });
+                      alert("Accès administrateur révoqué avec succès.");
+                      setAdminEmail('');
+                      setAdminPassword('');
+                    } catch (err: unknown) {
+                      const message = (err as any).response?.data?.error || "Erreur lors de la révocation.";
+                      alert(message);
+                    }
+                  }}
+                  className="flex-1 border border-red-200 text-red-600 dark:text-red-400 dark:border-red-900/50 rounded-md py-2.5 px-4 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-sm font-bold shadow-sm flex items-center justify-center h-[42px]"
+                >
+                    Révoquer un administrateur
                 </button>
               </div>
             </div>

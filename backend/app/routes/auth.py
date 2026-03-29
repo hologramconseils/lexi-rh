@@ -245,3 +245,83 @@ def delete_employee(current_user):
         db.session.rollback()
         current_app.logger.error(f"Error revoking access for {email}: {e}")
         return jsonify({'error': 'Internal server error during revocation.'}), 500
+
+@bp.route('/admins', methods=['GET'])
+@token_required
+def get_admins(current_user):
+    """List all admins (employers) in the current workspace."""
+    if current_user.role not in ['employer', 'admin']:
+        return jsonify({'error': 'Permission denied.'}), 403
+        
+    admins = User.query.filter_by(
+        workspace_id=current_user.workspace_id,
+        role='employer'
+    ).all()
+    
+    return jsonify([admin.to_dict() for admin in admins])
+
+@bp.route('/register-admin', methods=['POST'])
+@token_required
+def register_admin(current_user):
+    """Allows an existing employer to register another administrator for their workspace."""
+    if current_user.role not in ['employer', 'admin']:
+        return jsonify({'error': 'Permission denied.'}), 403
+        
+    data = request.get_json()
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'Email and password required'}), 400
+        
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({'error': 'Email already exists'}), 400
+        
+    new_admin = User(
+        email=data['email'], 
+        role='employer',
+        workspace_id=current_user.workspace_id
+    )
+    new_admin.set_password(data['password'])
+    
+    db.session.add(new_admin)
+    db.session.commit()
+    
+    return jsonify({'message': 'Administrator created successfully', 'user': new_admin.to_dict()}), 201
+
+@bp.route('/admin', methods=['DELETE'])
+@token_required
+def delete_admin(current_user):
+    """Allows an employer to revoke access for another administrator in their workspace."""
+    if current_user.role not in ['employer', 'admin']:
+        return jsonify({'error': 'Permission denied.'}), 403
+        
+    data = request.get_json()
+    if not data or not data.get('email'):
+        return jsonify({'error': 'Admin email required'}), 400
+        
+    email = data.get('email')
+    
+    admin_to_delete = User.query.filter_by(
+        email=email, 
+        role='employer', 
+        workspace_id=current_user.workspace_id
+    ).first()
+    
+    if not admin_to_delete:
+        return jsonify({'error': 'Administrator not found in your workspace.'}), 404
+        
+    try:
+        db.session.delete(admin_to_delete)
+        db.session.commit()
+        return jsonify({'message': f'Admin access for {email} has been revoked.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error revoking admin access for {email}: {e}")
+        return jsonify({'error': 'Internal server error during revocation.'}), 500
+
+@bp.route('/status', methods=['GET'])
+def get_system_status():
+    """Global check if any administrator exists in the system."""
+    admin_count = User.query.filter(User.role.in_(['employer', 'admin'])).count()
+    return jsonify({
+        'has_admins': admin_count > 0,
+        'count': admin_count
+    })
