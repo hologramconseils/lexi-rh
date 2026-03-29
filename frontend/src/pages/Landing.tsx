@@ -84,8 +84,8 @@ const Landing: React.FC = () => {
               <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-10 sm:p-16 text-center text-white relative overflow-hidden shadow-2xl shadow-blue-600/20">
                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
                  <h2 className="text-3xl sm:text-4xl font-extrabold mb-6 relative">Prêt à moderniser votre gestion RH ?</h2>
-                 <p className="text-lg text-blue-100 mb-10 max-w-2xl mx-auto relative opacity-90 font-medium">
-                    Rejoignez les entreprises qui font confiance à Lexi-RH pour simplifier l’accès à l’information de votre entreprise.
+                 <p className="text-lg text-blue-100 mb-10 max-w-2xl mx-auto relative opacity-90 font-medium font-inter">
+                    Accédez simplement à la documentation de votre entreprise avec Lexi-RH.
                  </p>
                   <div className="flex flex-wrap items-center justify-center gap-6 relative">
                     <div className="flex flex-col text-left">
