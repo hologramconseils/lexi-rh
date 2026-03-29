@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Search, ShieldCheck, Zap, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { BookOpen, ShieldCheck, Zap, ArrowRight, CheckCircle2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -24,13 +24,13 @@ const Landing: React.FC = () => {
                 <span className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-widest">Nouveau : Version Corporate 2026</span>
               </div>
               
-              <h1 className="text-5xl sm:text-6xl font-extrabold text-slate-900 dark:text-white mb-6 tracking-tight animate-in fade-in slide-in-from-bottom-4 duration-700 leading-tight">
-                L'IA au service de votre <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">conformité RH</span>
+              <h1 className="text-5xl sm:text-6xl font-extrabold text-slate-900 dark:text-white mb-6 tracking-tight animate-in fade-in slide-in-from-bottom-4 duration-700 leading-tight text-balance">
+                Au service de votre <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">conformité RH</span>
               </h1>
               
               <p className="text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">
-                Accédez instantanément à la vérité juridique de votre entreprise. 
-                Une recherche verbatim sécurisée, sans hallucination, directement dans vos sources officielles.
+                Accédez instantanément à la documentation de votre entreprise. 
+                Une recherche verbatim sécurisée, directement dans vos sources officielles.
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
@@ -50,39 +50,6 @@ const Landing: React.FC = () => {
               </div>
             </div>
 
-            {/* Mockup Preview */}
-            <div className="mt-20 relative animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[2.5rem] blur opacity-20 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative bg-white dark:bg-slate-800 rounded-[2rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
-                  <div className="flex space-x-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-400/80"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-400/80"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-400/80"></div>
-                  </div>
-                  <div className="mx-auto bg-white dark:bg-slate-900 px-8 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] text-slate-400 font-mono">
-                    rh.hologramconseils.com/dashboard
-                  </div>
-                </div>
-                <div className="p-8 sm:p-12">
-                   <div className="max-w-2xl mx-auto">
-                      <div className="h-12 bg-slate-100 dark:bg-slate-700 rounded-xl mb-6 flex items-center px-4">
-                         <Search className="w-4 h-4 text-slate-400 mr-2" />
-                         <div className="h-2 w-48 bg-slate-200 dark:bg-slate-600 rounded"></div>
-                      </div>
-                      <div className="space-y-4">
-                         <div className="h-32 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-900/30 p-4">
-                            <div className="h-2 w-1/4 bg-blue-200 dark:bg-blue-800 rounded mb-4"></div>
-                            <div className="space-y-2">
-                               <div className="h-2 w-full bg-blue-100 dark:bg-blue-900/40 rounded"></div>
-                               <div className="h-2 w-5/6 bg-blue-100 dark:bg-blue-900/40 rounded"></div>
-                            </div>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -128,7 +95,7 @@ const Landing: React.FC = () => {
                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
                  <h2 className="text-3xl sm:text-4xl font-extrabold mb-6 relative">Prêt à moderniser votre gestion RH ?</h2>
                  <p className="text-lg text-blue-100 mb-10 max-w-2xl mx-auto relative opacity-90 font-medium">
-                    Rejoignez les entreprises qui font confiance à Lexi-RH pour simplifier l'accès à l'information juridique.
+                    Rejoignez les entreprises qui font confiance à Lexi-RH pour simplifier l’accès à l’information de votre entreprise.
                  </p>
                  <div className="flex flex-wrap items-center justify-center gap-6 relative">
                     <Link to="/login" className="px-8 py-4 bg-white text-blue-700 font-bold rounded-2xl hover:bg-blue-50 transition-all shadow-xl">
