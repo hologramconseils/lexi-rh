@@ -34,7 +34,7 @@ const Login: React.FC = () => {
         });
         login(response.data.token, response.data.user);
         
-        if (response.data.user.role === 'admin') {
+        if (response.data.user.role === 'admin' || response.data.user.role === 'employer') {
           navigate('/admin');
         } else {
           navigate('/dashboard');
