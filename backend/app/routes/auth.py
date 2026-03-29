@@ -235,7 +235,7 @@ def delete_employee(current_user):
     ).first()
     
     if not employee:
-        return jsonify({'error': 'Employee not found in your workspace.'}), 404
+        return jsonify({'error': "Ce salarié n'existe pas ou appartient à un autre espace de travail."}), 404
         
     try:
         db.session.delete(employee)
@@ -306,7 +306,7 @@ def delete_admin(current_user):
     ).first()
     
     if not admin_to_delete:
-        return jsonify({'error': 'Administrator not found in your workspace.'}), 404
+        return jsonify({'error': "Cet administrateur n'existe pas ou appartient à un autre espace de travail."}), 404
         
     try:
         db.session.delete(admin_to_delete)
