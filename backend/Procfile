@@ -1,1 +1,1 @@
-web: python3 relink_documents.py && gunicorn run:app
+web: gunicorn run:app
