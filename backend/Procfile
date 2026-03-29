@@ -1,1 +1,1 @@
-web: python3 reset_users.py && gunicorn run:app
+web: gunicorn run:app
